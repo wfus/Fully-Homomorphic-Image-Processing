@@ -5,6 +5,8 @@ build*/*
 !CMakeLists.txt
 !*/*CMakeLists.txt
 !*/CMakeLists.txt
+!packages.txt
+!README.txt
 
 
 # We don't want images except for default testing

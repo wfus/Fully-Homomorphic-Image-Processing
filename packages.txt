@@ -1,0 +1,9 @@
+opencv-python
+numpy
+scipy
+
+
+
+
+
+
