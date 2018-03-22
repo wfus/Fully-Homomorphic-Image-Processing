@@ -7,6 +7,11 @@ build*/*
 !*/CMakeLists.txt
 
 
+# We don't want images except for default testing
+!*/*kung.jpg
+*.jpg
+
+
 
 */*.DS_Store
 .DS_Store
