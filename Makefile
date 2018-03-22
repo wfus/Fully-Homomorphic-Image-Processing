@@ -1,3 +1,11 @@
+HELIB = HElib
+NTL = ntl-10.5.0
+CC = g++
+CFLAGS = -std=c++14 -g -Wall -static
+BLDDIR = build
+SRCDIR = src
+
+
 helib: ntl 
 	@mkdir -p deps
 	@[[ -d deps/$(HELIB) ]] || \
@@ -22,11 +30,6 @@ ntl:
 	@cd deps/$(NTL)/src; make
 
 clean:
-	rm -f aes
-	rm -f multest
-	rm -f simon-simd
-	rm -f simon-blocks
-	rm -f simon-pt
 	rm -f $(BLDDIR)/*.o
 	rm -f *.bc
 	rm -f $(BLDDIR)/*.bc
