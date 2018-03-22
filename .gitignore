@@ -1,0 +1,7 @@
+deps/*
+build/*
+build*/*
+*.txt
+!CMakeLists.txt
+!*/*CMakeLists.txt
+!*/CMakeLists.txt
