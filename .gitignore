@@ -5,3 +5,10 @@ build*/*
 !CMakeLists.txt
 !*/*CMakeLists.txt
 !*/CMakeLists.txt
+
+
+
+*/*.DS_Store
+.DS_Store
+*.DS_Store
+
