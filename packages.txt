@@ -1,6 +1,8 @@
 opencv-python
 numpy
 scipy
+jupyter
+matplotlib
 
 
 
