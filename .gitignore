@@ -11,6 +11,7 @@ build*/*
 
 # We don't want images except for default testing
 !*/*kung.jpg
+!*/*kung*
 *.jpg
 
 
