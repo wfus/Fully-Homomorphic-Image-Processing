@@ -1,8 +1,8 @@
-import sys
-sys.path.insert(0, "../..")
+# import sys
+# sys.path.insert(0, "../..")
 
-if sys.version_info[0] >= 3:
-    raw_input = input
+# if sys.version_info[0] >= 3:
+#     raw_input = input
 
 tokens = (
     'NAME', 'NUMBER',
@@ -33,7 +33,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 # Build the lexer
-import ply.lex as lex
+import lex
 lex.lex()
 
 # Parsing rules
@@ -92,7 +92,7 @@ def p_error(p):
     else:
         print("Syntax error at EOF")
 
-import ply.yacc as yacc
+import yacc
 yacc.yacc()
 
 OPS = ['*', '-', '+', '/']
@@ -102,19 +102,15 @@ Parses the text line
 DEST = ARG1 (OP)  ... (OP) ARGN
 """
 def parse_line(line):
-    line = line.replace(' ', '').split('=')
+    line = line.replace(' ', '').replace(';', '').split('=')
     dst = line[0]
     args_op = line[1]
     if dst[-1] in OPS:
         args_op = dst + '(' + args_op + ')'
         dst = dst[:-1]
+    yacc.parse(args_op)
+    print(yacc.source)
     return (dst, yacc.parse(args_op))
 
-while 1:
-    try:
-        s = raw_input('calc > ')
-    except EOFError:
-        break
-    if not s:
-        continue
-    print(parse_line(s))
+if __name__ == '__main__':
+    print(parse_line('y = 1 + 1'))
