@@ -15,11 +15,17 @@ build*/*
 *.jpg
 
 
-
+# MAC DS_Store shenanigans
 */*.DS_Store
 .DS_Store
 *.DS_Store
 .DS_Store
+
+# Don't keep yacc tokenizer temp files
+*parsetab.py
+*.pyc
+*parser.out
+
 
 *.ipynb_checkpoints
 
