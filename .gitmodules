@@ -1,0 +1,3 @@
+[submodule "SEAL"]
+	path = SEAL
+	url = https://github.com/wfus/SEAL
