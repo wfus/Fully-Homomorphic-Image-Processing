@@ -21,7 +21,7 @@ const std::vector<int> S_ZAG = { 0,1,8,16,9,2,3,10,17,24,32,25,18,11,4,5,12,19,2
 const std::vector<double> S_STD_LUM_QUANT = { 16,11,12,14,12,10,16,14,13,14,18,17,16,19,24,40,26,24,22,22,24,49,35,37,29,40,58,51,61,60,57,51,56,55,64,72,92,78,64,68,87,69,55,56,80,109,81,87,95,98,103,104,103,62,77,113,121,112,100,120,92,101,103,99 };
 const std::vector<double> S_STD_CROMA_QUANT = { 17,18,18,24,21,24,47,26,26,47,99,66,56,66,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99 };
 
-
+void dct(double *data); 
 void raymond_average();
 std::vector<double> read_image(std::string fname);
 void encrypted_dct(std::vector<Ciphertext> &data,
@@ -43,6 +43,14 @@ void print_parameters(const SEALContext &context) {
     std::cout << "\\ noise_standard_deviation: " << context.noise_standard_deviation() << std::endl;
     std::cout << std::endl;
 }
+
+void dct_blocks(std::vector<std::vector<double>> &blocks) {
+    for (int a = 0; a < blocks.size(); a++) {
+        dct(&blocks[a][0]);
+    }
+} 
+
+
 
 int main()
 {
@@ -112,7 +120,7 @@ void print_blocks(std::vector<std::vector<double>> &blocks) {
 
 
 void raymond_average() {
-    std::vector<double> im = read_image("image/kung.txt");
+    std::vector<double> im = read_image("../image/kung.txt");
     print_image(im, 16, 16);
     std::vector<std::vector<double>> blocks = split_image_eight_block(im, 16, 16);
     print_blocks(blocks);
@@ -192,9 +200,24 @@ void raymond_average() {
     diff = std::chrono::steady_clock::now() - start; 
     std::cout << "Decrypting blocks: ";
     std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-    
-    
-    
+
+    // CALCULATE THE ACTUAL DCTS
+    im = read_image("../image/kung.txt");
+    std::vector<std::vector<double>> reg_blocks = split_image_eight_block(im, 16, 16);
+    dct_blocks(reg_blocks);
+
+    // FIND THE DIFFS
+    const double NOISE_EPSILON = 0.5; // Amount of noise we will consider "the same"
+    std::cout<<std::endl<<std::endl<<"DIFFS BETWEEN HOMO AND REG" <<std::endl;
+    for (int i = 0; i < reg_blocks.size(); i++) {
+        for (int j = 0; j < reg_blocks[0].size(); j++) {
+            reg_blocks[i][j] -= decoded_blocks[i][j];
+            if (reg_blocks[i][j] < NOISE_EPSILON && reg_blocks[i][j] > -NOISE_EPSILON) {
+                reg_blocks[i][j] = 0;
+            }
+        }
+    }
+    print_blocks(reg_blocks);
     return;
 }
 
@@ -386,83 +409,92 @@ void encrypted_dct(std::vector<Ciphertext> &data,
     }
     return;
 }
-/*
-void encrypted_dct(std::vector<Ciphertext> &data,
-                   Evaluator &evaluator, 
-                   FractionalEncoder &encoder, 
-                   Encryptor &encryptor) {
-    Ciphertext z1, z2, z3, z4, z5; 
-    Ciphertext tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp10, tmp11, tmp12, tmp13;
-    Ciphertext tmp14;
-    Ciphertext cons1;
-    encryptor.encrypt(encoder.encode(0.5441), cons1); 
-    int curr_index = 0;
-    for (int c = 0; c < BLOCK_SIZE; c++) {
-        tmp0 = Ciphertext(data[curr_index+0]); evaluator.add(tmp0, data[curr_index+7]);
-        tmp7 = Ciphertext(data[curr_index+0]); evaluator.sub(tmp7, data[curr_index+7]);
-        tmp1 = Ciphertext(data[curr_index+1]); evaluator.add(tmp1, data[curr_index+6]);
-        tmp6 = Ciphertext(data[curr_index+1]); evaluator.sub(tmp6, data[curr_index+6]);
-        tmp2 = Ciphertext(data[curr_index+2]); evaluator.add(tmp2, data[curr_index+5]);
-        tmp5 = Ciphertext(data[curr_index+2]); evaluator.sub(tmp5, data[curr_index+5]);
-        tmp3 = Ciphertext(data[curr_index+3]); evaluator.add(tmp3, data[curr_index+4]);
-        tmp4 = Ciphertext(data[curr_index+3]); evaluator.sub(tmp4, data[curr_index+4]);
 
-        tmp10 = Ciphertext(tmp0); evaluator.add(tmp10, tmp3);
-        tmp13 = Ciphertext(tmp0); evaluator.sub(tmp13, tmp3);
-        tmp11 = Ciphertext(tmp1); evaluator.add(tmp11, tmp2);
-        tmp12 = Ciphertext(tmp1); evaluator.sub(tmp12, tmp2);
 
-        data[curr_index+0] = tmp10; evaluator.add(data[curr_index+0], tmp11);
-        data[curr_index+4] = tmp10; evaluator.sub(data[curr_index+4], tmp11);
-        tmp14 = tmp12; evaluator.add(tmp14, tmp13);  
-        z1 = tmp14; evaluator.multiply(z1, cons1);
 
-        evaluator.multiply_plain(tmp13, encoder.encode(0.7653));
-        evaluator.multiply_plain(tmp12, encoder.encode(-1.8477));
-        data[curr_index+2] = z1; evaluator.add(data[curr_index+2], tmp13);
-        data[curr_index+6] = z1; evaluator.sub(data[curr_index+6], tmp12);
-
-        z1 = tmp4; evaluator.add(z1, tmp7);
-        z2 = tmp5; evaluator.add(z2, tmp6);
-        z3 = tmp4; evaluator.add(z3, tmp6);
-        z4 = tmp5; evaluator.add(z4, tmp7);
-        z5 = z3; evaluator.add(z5, z4); evaluator.multiply_plain(z5, encoder.encode(1.1758));
-
-        evaluator.multiply_plain(tmp4, encoder.encode(0.298)); 
-        evaluator.multiply_plain(tmp5, encoder.encode(2.053)); 
-        evaluator.multiply_plain(tmp6, encoder.encode(3.072)); 
-        evaluator.multiply_plain(tmp7, encoder.encode(1.501)); 
-
-    
-        evaluator.multiply_plain(z1, encoder.encode(-0.899)); 
-        evaluator.multiply_plain(z2, encoder.encode(-2.562)); 
-        evaluator.multiply_plain(z3, encoder.encode(-1.961)); 
-        evaluator.multiply_plain(z4, encoder.encode(-0.390)); 
-
-        evaluator.add(z3, z5);
-        evaluator.add(z4, z5);
-
-        data[curr_index+7] = tmp4; evaluator.add(data[curr_index+7], z1); evaluator.add(data[curr_index+7], z3);
-        data[curr_index+5] = tmp5; evaluator.add(data[curr_index+5], z2); evaluator.add(data[curr_index+5], z4);
-        data[curr_index+3] = tmp6; evaluator.add(data[curr_index+3], z2); evaluator.add(data[curr_index+3], z3);
-        data[curr_index+1] = tmp7; evaluator.add(data[curr_index+1], z1); evaluator.add(data[curr_index+1], z4);
-
-        curr_index += BLOCK_SIZE;
+// Forward DCT, regular no encryption
+void dct(double *data) {
+    double z1, z2, z3, z4, z5, tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp10, tmp11, tmp12, tmp13, *data_ptr;
+    data_ptr = data;
+    for (int c=0; c < 8; c++) {
+        tmp0 = data_ptr[0] + data_ptr[7];
+        tmp7 = data_ptr[0] - data_ptr[7];
+        tmp1 = data_ptr[1] + data_ptr[6];
+        tmp6 = data_ptr[1] - data_ptr[6];
+        tmp2 = data_ptr[2] + data_ptr[5];
+        tmp5 = data_ptr[2] - data_ptr[5];
+        tmp3 = data_ptr[3] + data_ptr[4];
+        tmp4 = data_ptr[3] - data_ptr[4];
+        tmp10 = tmp0 + tmp3;
+        tmp13 = tmp0 - tmp3;
+        tmp11 = tmp1 + tmp2;
+        tmp12 = tmp1 - tmp2;
+        data_ptr[0] = tmp10 + tmp11;
+        data_ptr[4] = tmp10 - tmp11;
+        z1 = (tmp12 + tmp13) * 0.541196100;
+        data_ptr[2] = z1 + tmp13 * 0.765366865;
+        data_ptr[6] = z1 + tmp12 * - 1.847759065;
+        z1 = tmp4 + tmp7;
+        z2 = tmp5 + tmp6;
+        z3 = tmp4 + tmp6;
+        z4 = tmp5 + tmp7;
+        z5 = (z3 + z4) * 1.175875602;
+        tmp4 *= 0.298631336;
+        tmp5 *= 2.053119869;
+        tmp6 *= 3.072711026;
+        tmp7 *= 1.501321110;
+        z1 *= -0.899976223;
+        z2 *= -2.562915447;
+        z3 *= -1.961570560;
+        z4 *= -0.390180644;
+        z3 += z5;
+        z4 += z5;
+        data_ptr[7] = tmp4 + z1 + z3;
+        data_ptr[5] = tmp5 + z2 + z4;
+        data_ptr[3] = tmp6 + z2 + z3;
+        data_ptr[1] = tmp7 + z1 + z4;
+        data_ptr += 8;
     }
-    curr_index = 0; 
 
-    for (int c = 0; c < BLOCK_SIZE; c++) {
-        tmp0 = data[c + 0]; evaluator.add(tmp0, data[c + 56]);
-        tmp7 = data[c + 0]; evaluator.add(tmp7, data[c + 56]);
-        tmp1 = data[c + 8]; evaluator.add(tmp1, data[c + 48]);
-        tmp6 = data[c + 8]; evaluator.add(tmp6, data[c + 48]);
-        tmp2 = data[c + 16]; evaluator.add(tmp2, data[c + 40]);
-        tmp5 = data[c + 16]; evaluator.add(tmp5, data[c + 40]);
-        tmp3 = data[c + 24]; evaluator.add(tmp3, data[c + 32]);
-        tmp4 = data[c + 24]; evaluator.add(tmp4, data[c + 32]);
+    data_ptr = data;
 
-
-
+    for (int c=0; c < 8; c++) {
+        tmp0 = data_ptr[8*0] + data_ptr[8*7];
+        tmp7 = data_ptr[8*0] - data_ptr[8*7];
+        tmp1 = data_ptr[8*1] + data_ptr[8*6];
+        tmp6 = data_ptr[8*1] - data_ptr[8*6];
+        tmp2 = data_ptr[8*2] + data_ptr[8*5];
+        tmp5 = data_ptr[8*2] - data_ptr[8*5];
+        tmp3 = data_ptr[8*3] + data_ptr[8*4];
+        tmp4 = data_ptr[8*3] - data_ptr[8*4];
+        tmp10 = tmp0 + tmp3;
+        tmp13 = tmp0 - tmp3;
+        tmp11 = tmp1 + tmp2;
+        tmp12 = tmp1 - tmp2;
+        data_ptr[8*0] = (tmp10 + tmp11) / 8.0;
+        data_ptr[8*4] = (tmp10 - tmp11) / 8.0;
+        z1 = (tmp12 + tmp13) * 0.541196100;
+        data_ptr[8*2] = (z1 + tmp13 * 0.765366865) / 8.0;
+        data_ptr[8*6] = (z1 + tmp12 * -1.847759065) / 8.0;
+        z1 = tmp4 + tmp7;
+        z2 = tmp5 + tmp6;
+        z3 = tmp4 + tmp6;
+        z4 = tmp5 + tmp7;
+        z5 = (z3 + z4) * 1.175875602;
+        tmp4 *= 0.298631336;
+        tmp5 *= 2.053119869;
+        tmp6 *= 3.072711026;
+        tmp7 *= 1.501321110;
+        z1 *= -0.899976223;
+        z2 *= -2.562915447;
+        z3 *= -1.961570560;
+        z4 *= -0.390180644;
+        z3 += z5;
+        z4 += z5;
+        data_ptr[8*7] = (tmp4 + z1 + z3) / 8.0;
+        data_ptr[8*5] = (tmp5 + z2 + z4) / 8.0;
+        data_ptr[8*3] = (tmp6 + z2 + z3) / 8.0;
+        data_ptr[8*1] = (tmp7 + z1 + z4) / 8.0;
+        data_ptr++;
     }
-    return;
-}*/
+}
