@@ -81,7 +81,7 @@ void print_image(std::vector<unsigned char> &im, int w, int h) {
 void raymond_average() {
     int width = 16;
     int height = 16;
-    std::vector<unsigned char> im = read_image("image/kung.txt");
+    std::vector<unsigned char> im = read_image("../image/kung.txt");
     print_image(im, width, height);
     int buf_size = 1024;
     void *pBuf = malloc(buf_size);

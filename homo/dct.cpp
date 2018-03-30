@@ -114,7 +114,7 @@ void dct_blocks(std::vector<std::vector<double>> &blocks) {
 
 
 void raymond_average() {
-    std::vector<double> im = read_image("image/kung.txt");
+    std::vector<double> im = read_image("../image/kung.txt");
     print_image(im, 16, 16);
     std::vector<std::vector<double>> blocks = split_image_eight_block(im, 16, 16);
     dct_blocks(blocks);
