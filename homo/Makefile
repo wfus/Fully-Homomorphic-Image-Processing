@@ -11,7 +11,7 @@ all : raymond dct encode test
 
 
 raymond : raymond.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) raymond.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/raymond 
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) fhe_image.h raymond.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/raymond 
 
 dct : dct.cpp
 	@-mkdir -p $(dir $@)
