@@ -16,6 +16,7 @@
 using namespace seal;
 
 auto start = std::chrono::steady_clock::now();
+const bool VERBOSE = false;
 
 const std::vector<int> S_ZAG = { 0,1,8,16,9,2,3,10,17,24,32,25,18,11,4,5,12,19,26,33,40,48,41,34,27,20,13,6,7,14,21,28,35,42,49,56,57,50,43,36,29,22,15,23,30,37,44,51,58,59,52,45,38,31,39,46,53,60,61,54,47,55,62,63 };
 const std::vector<double> S_STD_LUM_QUANT = { 16,11,12,14,12,10,16,14,13,14,18,17,16,19,24,40,26,24,22,22,24,49,35,37,29,40,58,51,61,60,57,51,56,55,64,72,92,78,64,68,87,69,55,56,80,109,81,87,95,98,103,104,103,62,77,113,121,112,100,120,92,101,103,99 };
@@ -127,7 +128,7 @@ void raymond_average() {
 
     EncryptionParameters params;
     params.set_poly_modulus("1x^32768 + 1");
-    params.set_coeff_modulus(coeff_modulus_128(2048));
+    params.set_coeff_modulus(coeff_modulus_192(2048));
     params.set_plain_modulus(1 << 8);
     SEALContext context(params);
     print_parameters(context);
@@ -177,10 +178,19 @@ void raymond_average() {
     diff = std::chrono::steady_clock::now() - start; 
     std::cout << "DCT 1 Round: ";
     std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-    
-    std::cout << "Noise budget in result: "
-        << decryptor.invariant_noise_budget(encoded_blocks[0][0]) 
-        << " bits" << std::endl;
+
+    if (VERBOSE) {
+        for (int i = 0; i < encoded_blocks.size(); i++) {
+            for (int j = 0; j < encoded_blocks[0].size(); j++) {
+                std::cout << "Noise budget in result: "
+                << decryptor.invariant_noise_budget(encoded_blocks[0][0]) 
+                << " bits" << std::endl;
+            }
+        } 
+    }
+
+
+
 
     
     // DECODING THE RESULT
