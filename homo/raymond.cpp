@@ -9,6 +9,7 @@
 #include <random>
 #include <limits>
 #include <fstream>
+#include <cmath>
 
 
 #include "seal/seal.h"
@@ -50,8 +51,6 @@ void dct_blocks(std::vector<std::vector<double>> &blocks) {
         dct(&blocks[a][0]);
     }
 } 
-
-
 
 int main()
 {
@@ -120,6 +119,7 @@ void print_blocks(std::vector<std::vector<double>> &blocks) {
 } 
 
 
+
 void raymond_average() {
     std::vector<double> im = read_image("../image/kung.txt");
     print_image(im, 16, 16);
@@ -149,8 +149,25 @@ void raymond_average() {
     Decryptor decryptor(context, secret_key);
 
 
-    FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), 64, 32, 3);
+    // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)
+    // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
+    // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
+    const int POLY_BASE = 11;
+    const int N_FRACTIONAL_COEFFS = 3;  
+    const int N_NUMBER_COEFFS = 10;
 
+    FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
+
+    start = std::chrono::steady_clock::now(); 
+    // We will encode all of the numbers and encrypt them to check if a number is below 0
+    // without having to resort to bitvector AND/XOR and have the user encrypt twice :( 
+
+
+    diff = std::chrono::steady_clock::now() - start; 
+    std::cout << "Encoding less than 1: ";
+    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+
+    
     start = std::chrono::steady_clock::now(); 
     std::vector<std::vector<Ciphertext>> encoded_blocks;
     for (int i = 0; i < blocks.size(); i++) {
@@ -192,7 +209,6 @@ void raymond_average() {
 
 
 
-    
     // DECODING THE RESULT
     start = std::chrono::steady_clock::now(); 
     std::vector<std::vector<double>> decoded_blocks;
@@ -206,10 +222,11 @@ void raymond_average() {
         }
         decoded_blocks.push_back(decoded_block);
     }
-    print_blocks(decoded_blocks);
+    if (VERBOSE) print_blocks(decoded_blocks);
     diff = std::chrono::steady_clock::now() - start; 
     std::cout << "Decrypting blocks: ";
     std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+
 
     // CALCULATE THE ACTUAL DCTS
     im = read_image("../image/kung.txt");
@@ -217,17 +234,20 @@ void raymond_average() {
     dct_blocks(reg_blocks);
 
     // FIND THE DIFFS
-    const double NOISE_EPSILON = 0.5; // Amount of noise we will consider "the same"
-    std::cout<<std::endl<<std::endl<<"DIFFS BETWEEN HOMO AND REG" <<std::endl;
-    for (int i = 0; i < reg_blocks.size(); i++) {
-        for (int j = 0; j < reg_blocks[0].size(); j++) {
-            reg_blocks[i][j] -= decoded_blocks[i][j];
-            if (reg_blocks[i][j] < NOISE_EPSILON && reg_blocks[i][j] > -NOISE_EPSILON) {
-                reg_blocks[i][j] = 0;
+    if (VERBOSE) {
+        const double NOISE_EPSILON = 0.5; // Amount of noise we will consider "the same"
+        std::cout<<std::endl<<std::endl<<"DIFFS BETWEEN HOMO AND REG" <<std::endl;
+        for (int i = 0; i < reg_blocks.size(); i++) {
+            for (int j = 0; j < reg_blocks[0].size(); j++) {
+                reg_blocks[i][j] -= decoded_blocks[i][j];
+                if (reg_blocks[i][j] < NOISE_EPSILON && reg_blocks[i][j] > -NOISE_EPSILON) {
+                    reg_blocks[i][j] = 0;
+                }
             }
         }
+        print_blocks(reg_blocks);
     }
-    print_blocks(reg_blocks);
+    
     return;
 }
 
