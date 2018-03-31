@@ -1,5 +1,6 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
+#include "jpge.h"
 
 using namespace seal;
 
