@@ -125,6 +125,46 @@ def convert_expr_helper(expr, buf):
 
 
 TEST_LINES="""
+tmp0 = data_ptr[0] + data_ptr[7];
+tmp7 = data_ptr[0] - data_ptr[7];
+tmp1 = data_ptr[1] + data_ptr[6];
+tmp6 = data_ptr[1] - data_ptr[6];
+tmp2 = data_ptr[2] + data_ptr[5];
+tmp5 = data_ptr[2] - data_ptr[5];
+tmp3 = data_ptr[3] + data_ptr[4];
+tmp4 = data_ptr[3] - data_ptr[4];
+tmp10 = tmp0 + tmp3;
+tmp13 = tmp0 - tmp3;
+tmp11 = tmp1 + tmp2;
+tmp12 = tmp1 - tmp2;
+data_ptr[0] = tmp10 + tmp11;
+data_ptr[4] = tmp10 - tmp11;
+z1 = (tmp12 + tmp13) * 0.541196100;
+data_ptr[2] = z1 + tmp13 * 0.765366865;
+data_ptr[6] = z1 + tmp12 * - 1.847759065;
+z1 = tmp4 + tmp7;
+z2 = tmp5 + tmp6;
+z3 = tmp4 + tmp6;
+z4 = tmp5 + tmp7;
+z5 = (z3 + z4) * 1.175875602;
+tmp4 *= 0.298631336;
+tmp5 *= 2.053119869;
+tmp6 *= 3.072711026;
+tmp7 *= 1.501321110;
+z1 *= -0.899976223;
+z2 *= -2.562915447;
+z3 *= -1.961570560;
+z4 *= -0.390180644;
+z3 += z5;
+z4 += z5;
+data_ptr[7] = tmp4 + z1 + z3;
+data_ptr[5] = tmp5 + z2 + z4;
+data_ptr[3] = tmp6 + z2 + z3;
+data_ptr[1] = tmp7 + z1 + z4;
+
+
+
+
 tmp0 = data_ptr[0] + data_ptr[56];
 tmp7 = data_ptr[0] - data_ptr[56];
 tmp1 = data_ptr[8] + data_ptr[48];
