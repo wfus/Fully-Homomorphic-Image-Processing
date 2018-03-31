@@ -307,6 +307,21 @@ void dct_blocks(std::vector<std::vector<double>> &blocks) {
     for (int a = 0; a < blocks.size(); a++) {
         dct(&blocks[a][0]);
     }
+}
+
+void print_parameters(const SEALContext &context) {
+    std::cout << "/ Encryption parameters:" << std::endl;
+    std::cout << "| poly_modulus: " << context.poly_modulus().to_string() << std::endl;
+
+    /*
+    Print the size of the true (product) coefficient modulus
+    */
+    std::cout << "| coeff_modulus size: " 
+        << context.total_coeff_modulus().significant_bit_count() << " bits" << std::endl;
+
+    std::cout << "| plain_modulus: " << context.plain_modulus().value() << std::endl;
+    std::cout << "\\ noise_standard_deviation: " << context.noise_standard_deviation() << std::endl;
+    std::cout << std::endl;
 } 
 
 #endif
