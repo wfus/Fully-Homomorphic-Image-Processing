@@ -16,6 +16,7 @@
 
 
 #include "seal/seal.h"
+
 using namespace seal;
 
 
@@ -35,6 +36,14 @@ std::vector<std::vector<double>> split_image_eight_block(std::vector<double> im,
     }
     return lst;
 }
+
+void print_image(uint8_t *im, int w, int h) {
+    std::cout << "Printing Image dim: (" << w << "," << h << ")" << std::endl;
+    for (int i = 0; i < w*h; i++) {
+        printf("%.2x ", im[i]);
+        if ((i + 1) % w == 0) std::cout << std::endl;
+    }
+} 
 
 void print_image(std::vector<double> &im, int w, int h) {
     std::cout << "Printing Image dim: (" << w << "," << h << ")" << std::endl;
@@ -68,6 +77,24 @@ std::vector<double> read_image(std::string fname) {
 
     float tmp;
     for (int i = 0; i < w*h; i++) {
+        myfile >> tmp;
+        im.push_back(tmp);
+    }   
+    return im; 
+}
+
+std::vector<double> read_image(std::string fname, int* w, int *h) {
+
+    std::vector<double> im; 
+    std::ifstream myfile;
+        
+    myfile.open(fname.c_str());
+    myfile >> *w;
+    myfile >> *h;
+    std::cout << "Read in " << fname << "with dimensions: " << w << " x " << h << std::endl;
+
+    float tmp;
+    for (int i = 0; i < (*w) * (*h); i++) {
         myfile >> tmp;
         im.push_back(tmp);
     }   
@@ -280,6 +307,21 @@ void dct_blocks(std::vector<std::vector<double>> &blocks) {
     for (int a = 0; a < blocks.size(); a++) {
         dct(&blocks[a][0]);
     }
+}
+
+void print_parameters(const SEALContext &context) {
+    std::cout << "/ Encryption parameters:" << std::endl;
+    std::cout << "| poly_modulus: " << context.poly_modulus().to_string() << std::endl;
+
+    /*
+    Print the size of the true (product) coefficient modulus
+    */
+    std::cout << "| coeff_modulus size: " 
+        << context.total_coeff_modulus().significant_bit_count() << " bits" << std::endl;
+
+    std::cout << "| plain_modulus: " << context.plain_modulus().value() << std::endl;
+    std::cout << "\\ noise_standard_deviation: " << context.noise_standard_deviation() << std::endl;
+    std::cout << std::endl;
 } 
 
 #endif

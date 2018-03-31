@@ -25,22 +25,6 @@ const std::vector<double> S_STD_LUM_QUANT = { 16,11,12,14,12,10,16,14,13,14,18,1
 const std::vector<double> S_STD_CROMA_QUANT = { 17,18,18,24,21,24,47,26,26,47,99,66,56,66,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99 };
 
 void raymond_average();
-std::vector<double> read_image(std::string fname);
-
-void print_parameters(const SEALContext &context) {
-    std::cout << "/ Encryption parameters:" << std::endl;
-    std::cout << "| poly_modulus: " << context.poly_modulus().to_string() << std::endl;
-
-    /*
-    Print the size of the true (product) coefficient modulus
-    */
-    std::cout << "| coeff_modulus size: " 
-        << context.total_coeff_modulus().significant_bit_count() << " bits" << std::endl;
-
-    std::cout << "| plain_modulus: " << context.plain_modulus().value() << std::endl;
-    std::cout << "\\ noise_standard_deviation: " << context.noise_standard_deviation() << std::endl;
-    std::cout << std::endl;
-}
 
 
 int main()
