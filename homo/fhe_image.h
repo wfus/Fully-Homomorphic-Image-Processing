@@ -74,6 +74,24 @@ std::vector<double> read_image(std::string fname) {
     return im; 
 }
 
+std::vector<double> read_image(std::string fname, int* w, int *h) {
+
+    std::vector<double> im; 
+    std::ifstream myfile;
+        
+    myfile.open(fname.c_str());
+    myfile >> *w;
+    myfile >> *h;
+    std::cout << "Read in " << fname << "with dimensions: " << w << " x " << h << std::endl;
+
+    float tmp;
+    for (int i = 0; i < (*w) * (*h); i++) {
+        myfile >> tmp;
+        im.push_back(tmp);
+    }   
+    return im; 
+}
+
 
 /* Recieves a 8x8 box of pixels, in ciphertext form. 
  * Data should be laid out in a 64 element vector with 
