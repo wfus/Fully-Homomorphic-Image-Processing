@@ -819,7 +819,9 @@ bool jpeg_encoder::emit_end_markers()
     emit_marker(M_EOI);
     return m_all_stream_writes_succeeded;
 }
-
+/* WFUEDIT
+ * LOOK HERE TO SEE WORKFLOW
+ */
 bool jpeg_encoder::compress_image()
 {
     for(int c=0; c < m_num_components; c++) {
