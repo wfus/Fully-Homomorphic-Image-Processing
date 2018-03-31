@@ -16,6 +16,7 @@
 
 
 #include "seal/seal.h"
+
 using namespace seal;
 
 
@@ -35,6 +36,14 @@ std::vector<std::vector<double>> split_image_eight_block(std::vector<double> im,
     }
     return lst;
 }
+
+void print_image(uint8_t *im, int w, int h) {
+    std::cout << "Printing Image dim: (" << w << "," << h << ")" << std::endl;
+    for (int i = 0; i < w*h; i++) {
+        printf("%.2x ", im[i]);
+        if ((i + 1) % w == 0) std::cout << std::endl;
+    }
+} 
 
 void print_image(std::vector<double> &im, int w, int h) {
     std::cout << "Printing Image dim: (" << w << "," << h << ")" << std::endl;
