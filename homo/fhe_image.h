@@ -21,11 +21,12 @@ using namespace seal;
 
 
 const int BLOCK_SIZE = 8;
-std::vector<std::vector<double>> split_image_eight_block(std::vector<double> im, int w, int h) {
-    std::vector<std::vector<double>> lst;
+template <class T>
+std::vector<std::vector<T>> split_image_eight_block(std::vector<T> &im, int w, int h) {
+    std::vector<std::vector<T>> lst;
     for (int i = 0; i < w; i += BLOCK_SIZE) {
         for (int j = 0; j < h; j += BLOCK_SIZE) {
-            std::vector<double> new_lst;
+            std::vector<T> new_lst;
             for (int k = 0; k < BLOCK_SIZE; k++)
             for (int l = 0; l < BLOCK_SIZE; l++) {
                 int index = (j+k)*w + i + l;
@@ -45,7 +46,8 @@ void print_image(uint8_t *im, int w, int h) {
     }
 } 
 
-void print_image(std::vector<double> &im, int w, int h) {
+template <class T>
+void print_image(std::vector<T> &im, int w, int h) {
     std::cout << "Printing Image dim: (" << w << "," << h << ")" << std::endl;
     for (int i = 0; i < im.size(); i++) {
         std::cout << std::setw(11) << im[i] << " ";
@@ -53,8 +55,8 @@ void print_image(std::vector<double> &im, int w, int h) {
     }
 } 
 
-
-void print_blocks(std::vector<std::vector<double>> &blocks) {
+template <class T>
+void print_blocks(std::vector<std::vector<T>> &blocks) {
     for (int a = 0; a < blocks.size(); a++) {
         std::cout << "Printing block " << a << std::endl;
         for (int i = 0; i < blocks[a].size(); i++) {
@@ -210,9 +212,6 @@ inline void quantize_fhe(std::vector<Ciphertext> &data,
         evaluator.multiply_plain(data[i], encoder.encode(1/quant[i]));
     }
 }
-
-
-
 
 
 // Forward DCT, regular no encryption
