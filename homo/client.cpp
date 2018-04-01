@@ -7,6 +7,7 @@
 using namespace seal;
 
 auto start = std::chrono::steady_clock::now();
+auto diff = std::chrono::steady_clock::now() - start; 
 const bool VERBOSE = true;
 
 std::vector<double> read_image(std::string fname);
@@ -17,7 +18,7 @@ int main(int argc, char** argv) {
         sending = false;
     }
     if (sending) {
-        const char* test_filename = "../image/kung.jpg";
+        const char* test_filename = "../image/boaz.jpeg";
         const int requested_composition = 3;
         int width = 0, height = 0, actual_composition = 0;
         uint8_t *image_data = stbi_load(test_filename, &width, &height, &actual_composition, requested_composition);
@@ -28,7 +29,7 @@ int main(int argc, char** argv) {
         EncryptionParameters params;
         params.set_poly_modulus("1x^8192 + 1");
         params.set_coeff_modulus(coeff_modulus_128(2048));
-        params.set_plain_modulus(1 << 14);
+        params.set_plain_modulus(1 << 12);
         SEALContext context(params);
         print_parameters(context);
 
@@ -50,7 +51,7 @@ int main(int argc, char** argv) {
         auto secret_key = keygen.secret_key();
         public_key.save(pkfile);
         secret_key.save(skfile);
-        auto diff = std::chrono::steady_clock::now() - start; 
+        diff = std::chrono::steady_clock::now() - start; 
         std::cout << "KeyGen: ";
         std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
@@ -81,13 +82,38 @@ int main(int argc, char** argv) {
             c.save(myfile);
             if (i % 100 == 0) std::cout << i << std::endl;
         }
+        diff = std::chrono::steady_clock::now() - start; 
+        std::cout << "Ciphertext write: ";
+        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         myfile.close();
     }
     else
     {
         // We are recieving the results and then doing the actual compression
         // Note that it is impossible to do compression with purely FHE, 
-        // it is possible to do decompression though. 
+        // it is possible to do decompression though.
+        int width, height;
+        std::ifstream paramfile; 
+        paramfile.open("../keys/params.txt");
+        paramfile >> width;
+        paramfile >> height;
+        paramfile.close();
+        int block_pix = BLOCK_SIZE * BLOCK_SIZE;
+        int num_blocks = (width * height) / block_pix;
+        if (num_blocks % block_pix > 0) {
+            num_blocks += 1;
+        }
+
+        std::ofstream myfile;
+        myfile.open("../image/zoop.txt");
+        start = std::chrono::steady_clock::now(); 
+        for (int i = 0; i < num_blocks; i++) {
+            double block[block_pix];
+            for (int j = 0; i < block_pix) {
+                // TODO
+            }
+        }
+
     }
 
     return 0;
