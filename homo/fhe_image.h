@@ -217,6 +217,34 @@ inline void quantize_fhe(std::vector<Ciphertext> &data,
     }
 }
 
+/* Recieves three ciphertexts, corresponding to R, G, B. Does 
+ * an operation in place that maps R->Y,  
+ */
+inline void rgb_to_ycc_fhe(Ciphertext &r,
+                           Ciphertext &g,
+                           Ciphertext &b,
+                           Evaluator &evaluator, 
+                           FractionalEncoder &encoder, 
+                           Encryptor &encryptor) {
+    Ciphertext y, u, v;
+    Ciphertext boaz1(r); evaluator.multiply_plain(boaz1, encoder.encode(0.299)); Ciphertext boaz2(g); evaluator.multiply_plain(boaz2, encoder.encode(0.587)); Ciphertext boaz3(boaz1); evaluator.add(boaz3, boaz2); Ciphertext boaz4(b); evaluator.multiply_plain(boaz4, encoder.encode(0.114)); Ciphertext boaz5(boaz3); evaluator.add(boaz5, boaz4); Ciphertext boaz6(boaz5); evaluator.sub_plain(boaz6, encoder.encode(128.0)); y = boaz6;
+    Ciphertext boaz7(r); evaluator.multiply_plain(boaz7, encoder.encode(-0.168736)); Ciphertext boaz8(g); evaluator.multiply_plain(boaz8, encoder.encode(0.331264)); Ciphertext boaz9(boaz7); evaluator.sub(boaz9, boaz8); Ciphertext boaz10(b); evaluator.multiply_plain(boaz10, encoder.encode(0.5)); Ciphertext boaz11(boaz9); evaluator.add(boaz11, boaz10); u = boaz11;
+    Ciphertext boaz12(r); evaluator.multiply_plain(boaz12, encoder.encode(0.5)); Ciphertext boaz13(g); evaluator.multiply_plain(boaz13, encoder.encode(0.418688)); Ciphertext boaz14(boaz12); evaluator.sub(boaz14, boaz13); Ciphertext boaz15(b); evaluator.multiply_plain(boaz15, encoder.encode(0.081312)); Ciphertext boaz16(boaz14); evaluator.sub(boaz16, boaz15); v = boaz16;
+    r = y;
+    g = u;
+    b = v;
+}
+/*
+template<class T> static void RGB_to_YCC(image *img, const T *src, int width, int y)
+{
+    for (int x = 0; x < width; x++) {
+        const int r = src[x].r, g = src[x].g, b = src[x].b;
+        img[0].set_px( (0.299     * r) + (0.587     * g) + (0.114     * b)-128.0, x, y);
+        img[1].set_px(-(0.168736  * r) - (0.331264  * g) + (0.5       * b), x, y);
+        img[2].set_px( (0.5       * r) - (0.418688  * g) - (0.081312  * b), x, y);
+    }
+}
+*/
 
 // Forward DCT, regular no encryption
 inline void dct(double *data) {

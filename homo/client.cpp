@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
         start = std::chrono::steady_clock::now(); 
         for (int i = 0; i < num_blocks; i++) {
             double block[block_pix];
-            for (int j = 0; i < block_pix) {
+            for (int j = 0; j < block_pix; j++) {
                 // TODO
             }
         }
