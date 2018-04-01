@@ -7,7 +7,7 @@ LDFLAGS=-g
 
 .PHONY : all clean
 
-all : raymond dct encode test sender reciever
+all : raymond dct encode test server client
 
 
 raymond : raymond.cpp

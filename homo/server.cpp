@@ -6,6 +6,7 @@
 using namespace seal;
 
 auto start = std::chrono::steady_clock::now();
+auto diff = std::chrono::steady_clock::now() - start;
 void fhe_jpg(std::vector<Ciphertext> &raw_data, 
              int width, 
              int height,
@@ -46,7 +47,7 @@ int main(int argc, char** argv) {
     SecretKey secret_key;
     public_key.load(pkfile);
     secret_key.load(skfile);
-    auto diff = std::chrono::steady_clock::now() - start; 
+    diff = std::chrono::steady_clock::now() - start; 
     std::cout << "Key Load Time: ";
     std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
     pkfile.close(); skfile.close();    
@@ -94,12 +95,10 @@ int main(int argc, char** argv) {
     */
 
     // Actually run the FHE calculations necessary...
-    start = std::chrono::steady_clock::now(); 
     fhe_jpg(nothingpersonnel, WIDTH, HEIGHT, evaluator, encoder, encryptor);
-    diff = std::chrono::steady_clock::now() - start; 
-    std::cout << "DCT/QUANT calculation time: ";
-    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
     
+    
+
     
     return 0;
 }
@@ -110,11 +109,29 @@ void fhe_jpg(std::vector<Ciphertext> &raw_data,
              Evaluator &evaluator,
              FractionalEncoder &encoder,
              Encryptor &encryptor) {
-    std::cout << "Got here" << std::endl;
+    // Perform DCT and quantization
+    start = std::chrono::steady_clock::now(); 
     std::vector<std::vector<Ciphertext>> blocks = split_image_eight_block(raw_data, width, height);
-    std::cout << "Got here" << std::endl;
     for (int i = 0; i < blocks.size(); i++) {
         encrypted_dct(blocks[i], evaluator, encoder, encryptor);
         quantize_fhe(blocks[i], S_STD_LUM_QUANT, evaluator, encoder, encryptor);
     }
+    diff = std::chrono::steady_clock::now() - start; 
+    std::cout << "DCT/QUANT calculation time: ";
+    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+
+    // Write output
+    std::ofstream myfile;
+    myfile.open("../image/zoop.txt");
+    start = std::chrono::steady_clock::now(); 
+    for (int i = 0; i < blocks.size(); i++) {
+        for (int j = 0; j < blocks[i].size(); j++) {
+            blocks[i][j].save(myfile);
+        }
+    }
+    myfile.close();
+    diff = std::chrono::steady_clock::now() - start; 
+    std::cout << "Ciphertext write time: ";
+    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+
 }
