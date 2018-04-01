@@ -7,7 +7,7 @@ LDFLAGS=-g
 
 .PHONY : all clean
 
-all : raymond dct encode test sender
+all : raymond dct encode test sender reciever
 
 
 raymond : raymond.cpp
@@ -28,6 +28,10 @@ test: test.cpp
 sender: test.cpp
 	@-mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) sender.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/sender
+
+reciever: test.cpp
+	@-mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) reciever.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/reciever
 
 
 clean :

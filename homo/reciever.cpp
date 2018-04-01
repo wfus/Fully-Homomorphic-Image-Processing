@@ -3,22 +3,19 @@
 #include "jpge.h"
 #include "stb_image.c"
 
-
 using namespace seal;
 
 auto start = std::chrono::steady_clock::now();
-const bool VERBOSE = true;
 
-std::vector<double> read_image(std::string fname);
+int main(int argc, char** argv) {
 
-int main()
-{
-    const char* test_filename = "../image/kung.jpg";
-    const int requested_composition = 3;
-    int width = 0, height = 0, actual_composition = 0;
-    uint8_t *image_data = stbi_load(test_filename, &width, &height, &actual_composition, requested_composition);
-    std::cout << width << " x " << height << std::endl;
-    print_image(image_data,  width, height);
+    // Read encryption parameters from file
+    int WIDTH = 0, HEIGHT = 0;
+    std::ifstream paramfile;
+    paramfile.open("../keys/param.txt");
+    paramfile >> WIDTH;
+    paramfile >> HEIGHT;
+    paramfile.close();
 
 
     // Encryption Parameters
@@ -29,26 +26,18 @@ int main()
     SEALContext context(params);
     print_parameters(context);
 
-    std::ofstream paramfile; 
-    paramfile.open("../keys/params.txt");
-    paramfile << width << std::endl;
-    paramfile << height << std::endl;
-    paramfile << (1 << 14) << std::endl;
-    paramfile.close();
-
 
     // Generate keys
-    std::ofstream pkfile, skfile;
+    std::ifstream pkfile, skfile;
     pkfile.open("../keys/pubkey.txt");
     skfile.open("../keys/seckey.txt");
     start = std::chrono::steady_clock::now(); 
-    KeyGenerator keygen(context);
-    auto public_key = keygen.public_key();
-    auto secret_key = keygen.secret_key();
-    public_key.save(pkfile);
-    secret_key.save(skfile);
+    PublicKey public_key;
+    SecretKey secret_key;
+    public_key.load(pkfile);
+    secret_key.load(skfile);
     auto diff = std::chrono::steady_clock::now() - start; 
-    std::cout << "KeyGen: ";
+    std::cout << "Key Load Time: ";
     std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
     pkfile.close(); skfile.close();    
 
@@ -66,21 +55,29 @@ int main()
     const int N_NUMBER_COEFFS = 10;
 
     FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
-    
-    std::ofstream myfile;
+
+    std::ifstream myfile;
     myfile.open("../image/nothingpersonnel.txt");
-    std::cout << width << " " << height << std::endl;
     start = std::chrono::steady_clock::now(); 
-    for (int i = 0; i < width * height; i++) {
+    std::vector<Ciphertext> nothingpersonnel;
+    for (int i = 0; i < WIDTH * HEIGHT; i++) {
         Ciphertext c;
-        double conv = (double)(image_data[i]);
-        encryptor.encrypt(encoder.encode(conv), c);
-        c.save(myfile);
+        c.load(myfile);
         if (i % 100 == 0) std::cout << i << std::endl;
+        nothingpersonnel.push_back(c);
     }
-
-
-
     myfile.close();
+    diff = std::chrono::steady_clock::now() - start; 
+    std::cout << "Ciphertext load time: ";
+    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+
+    /*
+    for (int i = 0; i < nothingpersonnel.size(); i++) {
+        Plaintext p;
+        decryptor.decrypt(nothingpersonnel[i], p);
+        std::cout << encoder.decode(p) << " ";
+        if ((i+1) % WIDTH == 0) std::cout << std::endl;
+    }
+    */
     return 0;
 }
