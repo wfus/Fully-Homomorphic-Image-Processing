@@ -25,13 +25,13 @@ test: test.cpp
 	@-mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) test.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/test
 
-sender: test.cpp
+client: test.cpp
 	@-mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) sender.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/sender
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) client.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/client
 
-reciever: test.cpp
+server: test.cpp
 	@-mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) reciever.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/reciever
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) server.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/server
 
 
 clean :
