@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
         paramfile << width << " ";
         paramfile << height << " ";
         paramfile << actual_composition << " ";
-        paramfile << (1 << 14) << std::endl;
+        paramfile << (1 << 12) << std::endl;
         paramfile.close();
 
 

@@ -17,12 +17,17 @@ void fhe_jpg(std::vector<Ciphertext> &raw_data,
 int main(int argc, char** argv) {
 
     // Read encryption parameters from file
-    int WIDTH = 0, HEIGHT = 0;
+    int WIDTH = 0, HEIGHT = 0, CHANNELS=0;
     std::ifstream paramfile;
     paramfile.open("../keys/params.txt");
     paramfile >> WIDTH;
     paramfile >> HEIGHT;
-    std::cout << WIDTH << " " << HEIGHT << std::endl;
+    paramfile >> CHANNELS;
+    std::cout << WIDTH << " " << HEIGHT << " Channels: " << CHANNELS << std::endl;
+    assert(CHANNELS != 0);
+    assert(CHANNELS == 3);
+    assert(WIDTH != 0);
+    assert(HEIGHT != 0);
     paramfile.close();
 
 
@@ -69,30 +74,37 @@ int main(int argc, char** argv) {
     std::ifstream myfile;
     myfile.open("../image/nothingpersonnel.txt");
     start = std::chrono::steady_clock::now(); 
-    std::vector<Ciphertext> nothingpersonnel;
+    std::vector<Ciphertext> red, green, blue;
     for (int i = 0; i < HEIGHT; i++) {
         for (int j = 0; j < WIDTH; j++) {
             Ciphertext c;
-            c.load(myfile);
-            nothingpersonnel.push_back(c);
+            c.load(myfile); red.push_back(c);
+            c.load(myfile); green.push_back(c);
+            c.load(myfile); blue.push_back(c);
         }
     }
     myfile.close();
     diff = std::chrono::steady_clock::now() - start; 
     std::cout << "Ciphertext load time: ";
     std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-   
-    /*
-    for (int i = 0; i < nothingpersonnel.size(); i++) {
-        Plaintext p;
-        decryptor.decrypt(nothingpersonnel[i], p);
-        std::cout << encoder.decode(p) << " ";
+
+    // CONVERT RGB INTO YCC
+    for (int i = 0; i < red.size(); i++) {
+        rgb_to_ycc_fhe(red[i], green[i], blue[i], evaluator, encoder, encryptor);
+    }
+
+
+    for (int i = 0; i < red.size(); i++) {
+        Plaintext p1, p2, p3;
+        decryptor.decrypt(red[i], p1);
+        decryptor.decrypt(green[i], p2);
+        decryptor.decrypt(blue[i], p3);
+        std::cout << "[" << encoder.decode(p1) << " " << encoder.decode(p2) << " " << encoder.decode(p3) << "] ";
         if ((i+1) % WIDTH == 0) std::cout << std::endl;
     }
-    */
 
     // Actually run the FHE calculations necessary...
-    fhe_jpg(nothingpersonnel, WIDTH, HEIGHT, evaluator, encoder, encryptor);
+    //fhe_jpg(nothingpersonnel, WIDTH, HEIGHT, evaluator, encoder, encryptor);
     
     
 
