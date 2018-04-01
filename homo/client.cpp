@@ -157,12 +157,14 @@ int main(int argc, char** argv) {
         sending = false;
     }
     if (sending) {
+
         const char* test_filename = "../image/boaz.jpeg";
         const int requested_composition = 3;
-        int WIDTH = 0, HEIGHT = 0, actual_composition = 0;
-        uint8_t *image_data = stbi_load(test_filename, &WIDTH, &HEIGHT, &actual_composition, requested_composition);
-        std::cout << WIDTH << " x " << HEIGHT << std::endl;
-        print_image(image_data,  WIDTH, HEIGHT);
+        int width = 0, height = 0, actual_composition = 0;
+        uint8_t *image_data = stbi_load(test_filename, &width, &height, &actual_composition, requested_composition);
+        // The image will be interleaved r g b r g b ...
+        std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
+        // print_image(image_data, width, height);
 
         // Encryption Parameters
         EncryptionParameters params;
@@ -174,9 +176,10 @@ int main(int argc, char** argv) {
 
         std::ofstream paramfile; 
         paramfile.open("../keys/params.txt");
-        paramfile << WIDTH << " ";
-        paramfile << HEIGHT << " ";
-        paramfile << (1 << 14) << std::endl;
+        paramfile << width << " ";
+        paramfile << height << " ";
+        paramfile << actual_composition << " ";
+        paramfile << (1 << 12) << std::endl;
         paramfile.close();
 
 
@@ -214,7 +217,7 @@ int main(int argc, char** argv) {
         myfile.open("../image/nothingpersonnel.txt");
         std::cout << WIDTH << " " << HEIGHT << std::endl;
         start = std::chrono::steady_clock::now(); 
-        for (int i = 0; i < WIDTH * HEIGHT; i++) {
+        for (int i = 0; i < width * height * actual_composition; i++) {
             Ciphertext c;
             double conv = (double)(image_data[i]);
             encryptor.encrypt(encoder.encode(conv), c);

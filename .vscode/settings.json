@@ -2,6 +2,15 @@
     "files.associations": {
         "algorithm": "cpp",
         "random": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "__config": "cpp",
+        "__nullptr": "cpp",
+        "cstddef": "cpp",
+        "exception": "cpp",
+        "initializer_list": "cpp",
+        "new": "cpp",
+        "stdexcept": "cpp",
+        "type_traits": "cpp",
+        "typeinfo": "cpp"
     }
 }
