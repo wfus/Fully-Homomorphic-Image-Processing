@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
     }
     if (sending) {
 
-        const char* test_filename = "../image/boaz.jpeg";
+        const char* test_filename = "../image/kung.jpg";
         const int requested_composition = 3;
         int width = 0, height = 0, actual_composition = 0;
         uint8_t *image_data = stbi_load(test_filename, &width, &height, &actual_composition, requested_composition);
@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
 
 
         // TEST
-        jo_write_jpg("../image/boazbarak.jpg", image_data, width, height, 3, 100);
+        jo_write_jpg("../image/htkung.jpg", image_data, width, height, 3, 100);
 
 
 
@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
         // Note that it is impossible to do compression with purely FHE, 
         // it is possible to do decompression though.
         const char* infile = "../image/zoop.txt";
-        const char* outfile = "../image/barak.jpg";
+        const char* outfile = "../image/ht.jpg";
 
         int QUALITY = 0;
 
