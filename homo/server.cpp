@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     EncryptionParameters params;
     params.set_poly_modulus("1x^8192 + 1");
     params.set_coeff_modulus(coeff_modulus_128(2048));
-    params.set_plain_modulus(1 << 12);
+    params.set_plain_modulus(1 << 14);
     SEALContext context(params);
     print_parameters(context);
 
