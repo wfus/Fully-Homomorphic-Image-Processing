@@ -66,12 +66,6 @@ int main(int argc, char** argv) {
     // FOR DEBUGGING ONLY!
     Decryptor decryptor(context, secret_key);
 
-    // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)
-    // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
-    // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
-    const int POLY_BASE = 11;
-    const int N_FRACTIONAL_COEFFS = 3;  
-    const int N_NUMBER_COEFFS = 10;
 
     FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
 
@@ -100,20 +94,26 @@ int main(int argc, char** argv) {
         rgb_to_ycc_fhe(red[i], green[i], blue[i], evaluator, encoder, encryptor);
     }
 
+
+    // for (int i = 0; i < red.size() && i < 64; i++) {
+    //     Plaintext p1, p2, p3;
+    //     decryptor.decrypt(red[i], p1);
+    //     decryptor.decrypt(green[i], p2);
+    //     decryptor.decrypt(blue[i], p3);
+    //     std::cout << "[" << encoder.decode(p1) << " " << encoder.decode(p2) << " " << encoder.decode(p3) << "] ";
+    //     if ((i+1) % WIDTH == 0) std::cout << std::endl;
+    // }
+
+
+
+
     if (CHANNELS == 3) {
         fhe_jpg(red, green, blue, WIDTH, HEIGHT, evaluator, encoder, encryptor);
     }
 
-    /*
-    for (int i = 0; i < red.size(); i++) {
-        Plaintext p1, p2, p3;
-        decryptor.decrypt(red[i], p1);
-        decryptor.decrypt(green[i], p2);
-        decryptor.decrypt(blue[i], p3);
-        std::cout << "[" << encoder.decode(p1) << " " << encoder.decode(p2) << " " << encoder.decode(p3) << "] ";
-        if ((i+1) % WIDTH == 0) std::cout << std::endl;
-    }
-    */
+    
+    
+    
 
     // Actually run the FHE calculations necessary, only supporting 3channel for now
     // At this point, red->Y, green->Cb, blue->Cr
@@ -139,11 +139,11 @@ void fhe_jpg(std::vector<Ciphertext> &y,
     std::vector<std::vector<Ciphertext>> cr_blocks = split_image_eight_block(cr, width, height);
     for (int i = 0; i < y_blocks.size(); i++) {
         encrypted_dct(y_blocks[i], evaluator, encoder, encryptor);
-        quantize_fhe(y_blocks[i], S_STD_LUM_QUANT, evaluator, encoder, encryptor);
+        // quantize_fhe(y_blocks[i], S_STD_LUM_QUANT, evaluator, encoder, encryptor);
         encrypted_dct(cb_blocks[i], evaluator, encoder, encryptor);
-        quantize_fhe(cb_blocks[i], S_STD_CROMA_QUANT, evaluator, encoder, encryptor);
+        // quantize_fhe(cb_blocks[i], S_STD_CROMA_QUANT, evaluator, encoder, encryptor);
         encrypted_dct(cr_blocks[i], evaluator, encoder, encryptor);
-        quantize_fhe(cr_blocks[i], S_STD_CROMA_QUANT, evaluator, encoder, encryptor);
+        // quantize_fhe(cr_blocks[i], S_STD_CROMA_QUANT, evaluator, encoder, encryptor);
     }
     diff = std::chrono::steady_clock::now() - start; 
     std::cout << "DCT/QUANT calculation time: ";
