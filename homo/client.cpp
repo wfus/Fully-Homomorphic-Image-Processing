@@ -2,6 +2,7 @@
 #include "fhe_image.h"
 #include "jpge.h"
 #include "stb_image.c"
+#include "jo_jpeg.h"
 
 
 using namespace seal;
@@ -166,11 +167,18 @@ int main(int argc, char** argv) {
         std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
         // print_image(image_data, width, height);
 
+
+        // TEST
+        jo_write_jpg("../image/boazbarak.jpg", image_data, width, height, 3, 100);
+
+
+
+
         // Encryption Parameters
         EncryptionParameters params;
         params.set_poly_modulus("1x^8192 + 1");
         params.set_coeff_modulus(coeff_modulus_128(2048));
-        params.set_plain_modulus(1 << 12);
+        params.set_plain_modulus(1 << 14);
         SEALContext context(params);
         print_parameters(context);
 
@@ -215,7 +223,7 @@ int main(int argc, char** argv) {
         
         std::ofstream myfile;
         myfile.open("../image/nothingpersonnel.txt");
-        std::cout << WIDTH << " " << HEIGHT << std::endl;
+        std::cout << width << " " << height << std::endl;
         start = std::chrono::steady_clock::now(); 
         for (int i = 0; i < width * height * actual_composition; i++) {
             Ciphertext c;
@@ -237,7 +245,7 @@ int main(int argc, char** argv) {
         const char* infile = "../image/zoop.txt";
         const char* outfile = "../image/barak.jpg";
 
-        int QUALITY = 90;
+        int QUALITY = 100;
 
         // Read encryption parameters from file
         int WIDTH = 0, HEIGHT = 0;
@@ -253,7 +261,7 @@ int main(int argc, char** argv) {
         EncryptionParameters params;
         params.set_poly_modulus("1x^8192 + 1");
         params.set_coeff_modulus(coeff_modulus_128(2048));
-        params.set_plain_modulus(1 << 12);
+        params.set_plain_modulus(1 << 14);
         SEALContext context(params);
         print_parameters(context);
 
@@ -337,11 +345,11 @@ int main(int argc, char** argv) {
         start = std::chrono::steady_clock::now(); 
         for (int i = 0; i < num_blocks; i++) {
             for (int k = 0; k < 3; k++) {
+                std::cout << i << "\t" << k << std::endl;
                 int block_zz[block_pix];
                 for (int j = 0; j < block_pix; j++) {
                     Ciphertext c;
                     c.load(myfile);
-                    std::cout << 64 * i + j << std::endl;
                     Plaintext p;
                     decryptor.decrypt(c, p);
                     v = encoder.decode(p);

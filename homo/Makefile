@@ -27,7 +27,7 @@ test: test.cpp
 
 client: test.cpp
 	@-mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) client.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/client
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) jo_jpeg.h client.cpp $(addprefix -I,$(INCLUDE_DIR)) $(addprefix -L,$(LIB_DIR)) -lseal -o $(BIN_DIR)/client
 
 server: test.cpp
 	@-mkdir -p $(dir $@)
