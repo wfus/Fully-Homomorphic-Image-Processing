@@ -215,9 +215,7 @@ int main(int argc, char** argv) {
         // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)
         // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
-        const int POLY_BASE = 11;
-        const int N_FRACTIONAL_COEFFS = 3;  
-        const int N_NUMBER_COEFFS = 10;
+        
 
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
         
@@ -245,7 +243,7 @@ int main(int argc, char** argv) {
         const char* infile = "../image/zoop.txt";
         const char* outfile = "../image/barak.jpg";
 
-        int QUALITY = 100;
+        int QUALITY = 0;
 
         // Read encryption parameters from file
         int WIDTH = 0, HEIGHT = 0;
@@ -288,9 +286,6 @@ int main(int argc, char** argv) {
         // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)
         // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
-        const int POLY_BASE = 11;
-        const int N_FRACTIONAL_COEFFS = 3;  
-        const int N_NUMBER_COEFFS = 10;
 
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
 
@@ -341,35 +336,31 @@ int main(int argc, char** argv) {
         std::ifstream myfile;
         myfile.open(infile);
         int bitBuf=0, bitCnt=0, DCY=0, DCU=0, DCV=0;
-        float v = 0;
+        double v = 0;
         start = std::chrono::steady_clock::now(); 
         for (int i = 0; i < num_blocks; i++) {
+            int block_zz[3][block_pix];
             for (int k = 0; k < 3; k++) {
                 std::cout << i << "\t" << k << std::endl;
-                int block_zz[block_pix];
                 for (int j = 0; j < block_pix; j++) {
                     Ciphertext c;
                     c.load(myfile);
                     Plaintext p;
                     decryptor.decrypt(c, p);
                     v = encoder.decode(p);
-                    block_zz[s_ZigZag[j]] = (int)(v < 0 ? ceilf(v - 0.5f) : floorf(v + 0.5f));
-                }
-                switch (k) {
-                    case 0:
-                        DCY = processBlock(fp, bitBuf, bitCnt, block_zz, fdtbl_Y, DCY, YDC_HT, YAC_HT);
-                        break;
-                    case 1:
-                        DCU = processBlock(fp, bitBuf, bitCnt, block_zz, fdtbl_UV, DCU, UVDC_HT, UVAC_HT);
-                        break;
-                    default:
-                        DCV = processBlock(fp, bitBuf, bitCnt, block_zz, fdtbl_UV, DCV, UVDC_HT, UVAC_HT);
+                    // std::cout << v << ", ";
+                    block_zz[k][s_ZigZag[j]] = (int)(v < 0 ? ceilf(v - 0.5f) : floorf(v + 0.5f));
                 }
             }
+            DCY = processBlock(fp, bitBuf, bitCnt, block_zz[0], fdtbl_Y, DCY, YDC_HT, YAC_HT);
+            DCU = processBlock(fp, bitBuf, bitCnt, block_zz[1], fdtbl_UV, DCU, UVDC_HT, UVAC_HT);
+            DCV = processBlock(fp, bitBuf, bitCnt, block_zz[2], fdtbl_UV, DCV, UVDC_HT, UVAC_HT);
         }
         // Write ending sequence
         static const unsigned short fillBits[] = {0x7F, 7};
 	    writeBits(fp, bitBuf, bitCnt, fillBits);
+        putc(0xFF, fp);
+        putc(0xD9, fp);
         myfile.close();
         fclose(fp);
 
