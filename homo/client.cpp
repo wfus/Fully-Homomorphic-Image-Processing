@@ -165,11 +165,8 @@ int main(int argc, char** argv) {
         uint8_t *image_data = stbi_load(test_filename, &width, &height, &actual_composition, requested_composition);
         // The image will be interleaved r g b r g b ...
         std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
-        // print_image(image_data, width, height);
 
-
-        // TEST
-        jo_write_jpg("../image/boazbarak.jpg", image_data, width, height, 3, 100);
+        //jo_write_jpg("../image/boazbarak.jpg", image_data, width, height, 3, 100);
 
 
 
@@ -177,8 +174,8 @@ int main(int argc, char** argv) {
         // Encryption Parameters
         EncryptionParameters params;
         params.set_poly_modulus("1x^8192 + 1");
-        params.set_coeff_modulus(coeff_modulus_128(2048));
-        params.set_plain_modulus(1 << 14);
+        params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
+        params.set_plain_modulus(PLAIN_MODULUS);
         SEALContext context(params);
         print_parameters(context);
 
@@ -187,7 +184,7 @@ int main(int argc, char** argv) {
         paramfile << width << " ";
         paramfile << height << " ";
         paramfile << actual_composition << " ";
-        paramfile << (1 << 12) << std::endl;
+        paramfile << PLAIN_MODULUS << std::endl;
         paramfile.close();
 
 
