@@ -16,3 +16,12 @@ We use Microsoft's [SEAL](https://www.microsoft.com/en-us/research/publication/s
 
 
 We used ```g++-7``` as our default compiler for everything. If you want to change this change the ```CXX=``` portions of the makefile and the install script. The install script ```install.sh``` should update the git submodule containing SEAL and build it automatically. Then, you should be able to make our example programs in ```homo/```.
+
+
+## Acknowledgements and External Sources
+
+We used a few external libraries and source code, here are links to their respective pages!
+* [SEAL](https://www.microsoft.com/en-us/research/publication/simple-encrypted-arithmetic-library-seal-v2-2/), a homomorphic computation library from Microsoft Research
+* [Jon Olick](https://www.jonolick.com/code.html)'s JPEG encoder
+* [Lecture Notes](http://www.intensecrypto.org/public/index.html) by Boaz Barak that got us started
+* [ffmpeg](https://www.ffmpeg.org/), video transcoding and audio processing library
