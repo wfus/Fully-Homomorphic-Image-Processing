@@ -18,6 +18,13 @@ void fhe_jpg(std::vector<Ciphertext> &y,
 void save_computed_blocks_interleaved_ycc(std::vector<std::vector<Ciphertext>> &y,
                                           std::vector<std::vector<Ciphertext>> &cb,
                                           std::vector<std::vector<Ciphertext>> &cr);
+void save_three_blocks_interleaved_ycc(std::ofstream &file,
+                                       std::vector<Ciphertext> &y,
+                                       std::vector<Ciphertext> &cb,
+                                       std::vector<Ciphertext> &cr);
+
+
+
 int main(int argc, char** argv) {
 
     // Read encryption parameters from file
@@ -38,8 +45,8 @@ int main(int argc, char** argv) {
     // Encryption Parameters
     EncryptionParameters params;
     params.set_poly_modulus("1x^8192 + 1");
-    params.set_coeff_modulus(coeff_modulus_128(2048));
-    params.set_plain_modulus(1 << 14);
+    params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
+    params.set_plain_modulus(PLAIN_MODULUS);
     SEALContext context(params);
     print_parameters(context);
 
@@ -66,36 +73,46 @@ int main(int argc, char** argv) {
     // FOR DEBUGGING ONLY!
     Decryptor decryptor(context, secret_key);
 
-
     FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
 
+    int num_blocks = WIDTH*HEIGHT/64;
+    std::ofstream outfile;
+    outfile.open("../image/zoop.txt"); 
     std::ifstream myfile;
     myfile.open("../image/nothingpersonnel.txt");
+    Ciphertext c;
+
+    // Load three blocks at a time for memory reasons.
+    // Do the DCT on these three blocks, and then save the three blocks to file
     start = std::chrono::steady_clock::now(); 
-    std::vector<Ciphertext> red, green, blue;
-    for (int i = 0; i < HEIGHT; i++) {
-        for (int j = 0; j < WIDTH; j++) {
-            Ciphertext c;
-            c.load(myfile); red.push_back(c);
-            c.load(myfile); green.push_back(c);
-            c.load(myfile); blue.push_back(c);
+    for (int curr_block = 0; curr_block < num_blocks; curr_block++) {
+        
+        // Load in only three blocks, important to only do three to not get OOM
+        std::vector<Ciphertext> red, green, blue;
+        for (int i = 0; i < BLOCK_SIZE*BLOCK_SIZE; i++) {c.load(myfile); red.push_back(c); } 
+        for (int i = 0; i < BLOCK_SIZE*BLOCK_SIZE; i++) {c.load(myfile); green.push_back(c); } 
+        for (int i = 0; i < BLOCK_SIZE*BLOCK_SIZE; i++) {c.load(myfile); blue.push_back(c); } 
+    
+        // CONVERT RGB INTO YCC in place
+        for (int i = 0; i < red.size(); i++) {
+            rgb_to_ycc_fhe(red[i], green[i], blue[i], evaluator, encoder, encryptor);
         }
+        encrypted_dct(red, evaluator, encoder, encryptor);
+        encrypted_dct(green, evaluator, encoder, encryptor);
+        encrypted_dct(blue, evaluator, encoder, encryptor);
+        save_three_blocks_interleaved_ycc(outfile, red, green, blue);
+
+        std::cout << "Finished " << curr_block << " block triples..." << std::endl;
     }
-    myfile.close();
+    std::cout << "DCT and File IO: ";
     diff = std::chrono::steady_clock::now() - start; 
-    std::cout << "Ciphertext load time: ";
     std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+    
+    myfile.close();
+    outfile.close();  
+    return 0;
 
-
-
-
-    // CONVERT RGB INTO YCC
-    for (int i = 0; i < red.size(); i++) {
-        rgb_to_ycc_fhe(red[i], green[i], blue[i], evaluator, encoder, encryptor);
-    }
-
-
-    // for (int i = 0; i < red.size() && i < 64; i++) {
+     // for (int i = 0; i < red.size() && i < 64; i++) {
     //     Plaintext p1, p2, p3;
     //     decryptor.decrypt(red[i], p1);
     //     decryptor.decrypt(green[i], p2);
@@ -103,25 +120,6 @@ int main(int argc, char** argv) {
     //     std::cout << "[" << encoder.decode(p1) << " " << encoder.decode(p2) << " " << encoder.decode(p3) << "] ";
     //     if ((i+1) % WIDTH == 0) std::cout << std::endl;
     // }
-
-
-
-
-    if (CHANNELS == 3) {
-        fhe_jpg(red, green, blue, WIDTH, HEIGHT, evaluator, encoder, encryptor);
-    }
-
-    
-    
-    
-
-    // Actually run the FHE calculations necessary, only supporting 3channel for now
-    // At this point, red->Y, green->Cb, blue->Cr
-    
-    
-
-    
-    return 0;
 }
 
 void fhe_jpg(std::vector<Ciphertext> &y,
@@ -151,6 +149,20 @@ void fhe_jpg(std::vector<Ciphertext> &y,
 
     save_computed_blocks_interleaved_ycc(y_blocks, cb_blocks, cr_blocks); 
 }
+
+
+// We want to store the output as blocks of Y Cb Cr interleaved by block
+// This should take in three blocks, one Y block, one Cb block, and one Cr block
+void save_three_blocks_interleaved_ycc(std::ofstream &myfile,
+                                       std::vector<Ciphertext> &y,
+                                       std::vector<Ciphertext> &cb,
+                                       std::vector<Ciphertext> &cr) {
+    for (int i = 0; i < y.size(); i++)  { y[i].save(myfile);  }
+    for (int i = 0; i < cb.size(); i++) { cb[i].save(myfile); }
+    for (int i = 0; i < cr.size(); i++) { cr[i].save(myfile); }
+}
+
+
 
 // We want to store the output as blocks of Y Cb Cr interleaved by block
 // This is why Nico is moving out
