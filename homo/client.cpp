@@ -281,8 +281,8 @@ int main(int argc, char** argv) {
         // Encryption Parameters
         EncryptionParameters params;
         params.set_poly_modulus("1x^8192 + 1");
-        params.set_coeff_modulus(coeff_modulus_128(2048));
-        params.set_plain_modulus(1 << 14);
+        params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
+        params.set_plain_modulus(PLAIN_MODULUS);
         SEALContext context(params);
         print_parameters(context);
 
