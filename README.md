@@ -25,3 +25,4 @@ We used a few external libraries and source code, here are links to their respec
 * [Jon Olick](https://www.jonolick.com/code.html)'s JPEG encoder
 * [Lecture Notes](http://www.intensecrypto.org/public/index.html) by Boaz Barak that got us started
 * [ffmpeg](https://www.ffmpeg.org/), video transcoding and audio processing library
+* [C++ Command Line Options](https://github.com/jarro2783/cxxopts), for quality of life
