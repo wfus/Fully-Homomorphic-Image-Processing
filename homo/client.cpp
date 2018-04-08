@@ -264,7 +264,7 @@ int main(int argc, char** argv) {
         // Note that it is very difficult to do compression with purely FHE, 
         // it is possible to do decompression though.
         const char* infile = "../image/zoop.txt";
-        const char* outfile = "../image/ht.jpg";
+        const char* outfile = "../image/new_boazzzzzz.jpg";
 
         int QUALITY = 0;
 
