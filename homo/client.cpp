@@ -3,7 +3,7 @@
 #include "jpge.h"
 #include "stb_image.c"
 #include "jo_jpeg.h"
-
+#include "cxxopts.h"
 
 using namespace seal;
 
@@ -152,17 +152,40 @@ int processBlock(FILE *fp, int &bitBuf, int &bitCnt, int* DU, float *fdtbl, int 
 }
 
 
-int main(int argc, char** argv) {
-    bool sending = true;
-    if (argc >= 2) {
-        sending = false;
-    }
-    if (sending) {
+int main(int argc, const char** argv) {
+    bool recieving = false;
+    bool sending = false;
+    std::string test_filename("../image/boazbarak.jpg");
 
-        const char* test_filename = "../image/boazbarak.jpg";
+    try {
+        cxxopts::Options options(argv[0], "Options for Client-Side FHE");
+        options.positional_help("[optional args]").show_positional_help();
+
+        options.add_options()
+            ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
+            ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
+            ("f,file", "Filename for input file to be homomorphically encrypted", cxxopts::value<std::string>())
+            ("help", "Print help");
+
+        auto result = options.parse(argc, argv);
+
+        if (result.count("help")) {
+            std::cout << options.help({"", "Group"}) << std::endl;
+            exit(0);
+        }
+        if (result.count("file")) {
+            test_filename = result["file"].as<std::string>();
+        } 
+    } 
+    catch (const cxxopts::OptionException& e) {
+        std::cout << "error parsing options: " << e.what() << std::endl;
+        exit(1);
+    }
+
+    if (sending) {
         const int requested_composition = 3;
         int width = 0, height = 0, actual_composition = 0;
-        uint8_t *image_data = stbi_load(test_filename, &width, &height, &actual_composition, requested_composition);
+        uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
         // The image will be interleaved r g b r g b ...
         std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
 

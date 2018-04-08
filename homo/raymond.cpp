@@ -14,6 +14,8 @@
 
 #include "seal/seal.h"
 #include "fhe_image.h"
+#include "../include/cxxopts.h"
+
 
 using namespace seal;
 
