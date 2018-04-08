@@ -3,7 +3,7 @@
 #include "jpge.h"
 #include "stb_image.c"
 #include "jo_jpeg.h"
-
+#include "cxxopts.h"
 
 using namespace seal;
 
