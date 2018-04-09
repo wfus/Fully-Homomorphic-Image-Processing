@@ -336,7 +336,8 @@ int main(int argc, const char** argv) {
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
 
         int block_pix = BLOCK_SIZE * BLOCK_SIZE;
-        int num_blocks = ((WIDTH + BLOCK_SIZE - 1) / BLOCK_SIZE) * ((HEIGHT + BLOCK_SIZE - 1) / BLOCK_SIZE);
+        // int num_blocks = ((WIDTH + BLOCK_SIZE - 1) / BLOCK_SIZE) * ((HEIGHT + BLOCK_SIZE - 1) / BLOCK_SIZE);
+        int num_blocks = (WIDTH / BLOCK_SIZE) * (HEIGHT  / BLOCK_SIZE);
 
         unsigned char YTable[64], UVTable[64];
         for(int i = 0; i < 64; ++i) {
