@@ -10,6 +10,49 @@ auto start = std::chrono::steady_clock::now();
 auto diff = std::chrono::steady_clock::now() - start; 
 const bool VERBOSE = true;
 
+static int decode_jpeg_image_fhe(jpeg *j);
+static int process_marker_fhe(jpeg *z, int m);
+
+/*
+typedef struct
+{
+   #ifdef STBI_SIMD
+   unsigned short dequant2[4][64];
+   #endif
+   stbi *s;
+   huffman huff_dc[4];
+   huffman huff_ac[4];
+   uint8 dequant[4][64];
+
+// sizes for components, interleaved MCUs
+   int img_h_max, img_v_max;
+   int img_mcu_x, img_mcu_y;
+   int img_mcu_w, img_mcu_h;
+
+// definition of jpeg image component
+   struct
+   {
+      int id;
+      int h,v;
+      int tq;
+      int hd,ha;
+      int dc_pred;
+
+      int x,y,w2,h2;
+      uint8 *data;
+      void *raw_data;
+      uint8 *linebuf;
+   } img_comp[4];
+
+   uint32         code_buffer; // jpeg entropy-coded buffer
+   int            code_bits;   // number of valid bits
+   unsigned char  marker;      // marker seen while filling entropy buffer
+   int            nomore;      // flag if we saw a marker so must stop
+
+   int scan_n, order[4];
+   int restart_interval, todo;
+} jpeg;
+*/
 
 int main(int argc, const char** argv) {
     bool recieving = false;
@@ -58,13 +101,23 @@ int main(int argc, const char** argv) {
     }
 
     if (sending) {
-        const int requested_composition = 3;
-        int width = 0, height = 0, actual_composition = 0;
-        uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
-        // The image will be interleaved r g b r g b ...
-        std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
+        
+        int requested_composition = 3; // requested number of channels
+        int actual_composition = 0, width = 0, height = 0;
 
-        //jo_write_jpg("../image/boazbarak.jpg", image_data, width, height, 3, 100);
+
+        // Load in JPEG image we will be working with
+        FILE *f = fopen(test_filename.c_str(), "rb");
+        unsigned char *result;
+        if (!f) {
+            std::cout << "Unable to open file... Exiting..." << std::endl;
+            exit(1);
+        } 
+        jpeg j; stbi s; j.s = &s;
+        start_file(&s,f);
+        load_jpeg_image(&j, &width, &height, &actual_composition, requested_composition);
+        fclose(f);
+
 
 
         // Encryption Parameters
@@ -116,50 +169,6 @@ int main(int argc, const char** argv) {
             n_fractional_coeffs, 
             n_poly_base);
 
-        // Write the ciphertext to file block by block - since most times
-        // ciphertext doesn't fit directly in RAM
-        // Write RED 8x8 BLOCK, GREEN 8x8 BLOCK, then BLUE 8x8 BLOCK
-        // Repeats until the entire image is converted to ciphertext. 
-        std::vector<double> red, green, blue; 
-        
-        for (int i = 0; i < width * height * actual_composition; i+=3) {
-            red.push_back((double) image_data[i]);
-            green.push_back((double) image_data[i+1]);
-            blue.push_back((double) image_data[i+2]);
-        }
-        std::vector<std::vector<double>> red_blocks, green_blocks, blue_blocks;
-        red_blocks = split_image_eight_block(red, width, height);
-        green_blocks = split_image_eight_block(green, width, height);
-        blue_blocks = split_image_eight_block(blue, width, height);
-
-        std::ofstream myfile;
-        myfile.open("../image/nothingpersonnel.txt");
-        std::cout << width << " " << height << std::endl;
-        start = std::chrono::steady_clock::now(); 
-        Ciphertext c;
-        double conv;
-        for (int i = 0; i < red_blocks.size(); i++) {
-            for (int j = 0; j < red_blocks[i].size(); j++) {
-                conv = red_blocks[i][j];
-                encryptor.encrypt(encoder.encode(conv), c);
-                c.save(myfile);
-            }
-            for (int j = 0; j < green_blocks[i].size(); j++) {
-                conv = green_blocks[i][j];
-                encryptor.encrypt(encoder.encode(conv), c);
-                c.save(myfile);
-            }
-            for (int j = 0; j < blue_blocks[i].size(); j++) {
-                conv = blue_blocks[i][j];
-                encryptor.encrypt(encoder.encode(conv), c);
-                c.save(myfile);
-            }
-            if (i % 10 == 0) std::cout << "Encoded "<< i << " blocks..." << std::endl;
-        }
-        diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "Ciphertext write: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-        myfile.close();
     }
     else
     {
@@ -207,6 +216,112 @@ int main(int argc, const char** argv) {
             n_number_coeffs, 
             n_fractional_coeffs, 
             n_poly_base);
+
+
+
     }
     return 0;
+}
+
+
+static int decode_jpeg_image_fhe(jpeg *j)
+{
+   int m;
+   j->restart_interval = 0;
+   if (!decode_jpeg_header(j, SCAN_load)) return 0;
+   m = get_marker(j);
+   while (!EOI(m)) {
+      if (SOS(m)) {
+         if (!process_scan_header(j)) return 0;
+         if (!parse_entropy_coded_data(j)) return 0;
+         if (j->marker == MARKER_none ) {
+            // handle 0s at the end of image data from IP Kamera 9060
+            while (!at_eof(j->s)) {
+               int x = get8(j->s);
+               if (x == 255) {
+                  j->marker = get8u(j->s);
+                  break;
+               } else if (x != 0) {
+                  return 0;
+               }
+            }
+            // if we reach eof without hitting a marker, get_marker() below will fail and we'll eventually return 0
+         }
+      } else {
+         if (!process_marker(j, m)) return 0;
+      }
+      m = get_marker(j);
+   }
+   return 1;
+}
+
+
+static int process_marker_fhe(jpeg *z, int m)
+{
+   int L;
+   switch (m) {
+      case MARKER_none: // no marker found
+         std::cout << "expected marker - Corrupt JPEG" << std::endl;
+         exit(1);
+
+      case 0xC2: // SOF - progressive
+         std::cout << "progressive jpeg - JPEG format not supported (progressive)" << std::endl;
+         exit(1);
+
+      case 0xDD: // DRI - specify restart interval
+         if (get16(z->s) != 4) return e("bad DRI len","Corrupt JPEG");
+         z->restart_interval = get16(z->s);
+         return 1;
+
+      case 0xDB: // DQT - define quantization table
+         L = get16(z->s)-2;
+         while (L > 0) {
+            int q = get8(z->s);
+            int p = q >> 4;
+            int t = q & 15,i;
+            if (p != 0) return e("bad DQT type","Corrupt JPEG");
+            if (t > 3) return e("bad DQT table","Corrupt JPEG");
+            for (i=0; i < 64; ++i)
+               z->dequant[t][dezigzag[i]] = get8u(z->s);
+            #ifdef STBI_SIMD
+            for (i=0; i < 64; ++i)
+               z->dequant2[t][i] = z->dequant[t][i];
+            #endif
+            L -= 65;
+         }
+         return L==0;
+
+      case 0xC4: // DHT - define huffman table
+         L = get16(z->s)-2;
+         while (L > 0) {
+            uint8 *v;
+            int sizes[16],i,m=0;
+            int q = get8(z->s);
+            int tc = q >> 4;
+            int th = q & 15;
+            if (tc > 1 || th > 3) return e("bad DHT header","Corrupt JPEG");
+            for (i=0; i < 16; ++i) {
+               sizes[i] = get8(z->s);
+               m += sizes[i];
+            }
+            L -= 17;
+            if (tc == 0) {
+               if (!build_huffman(z->huff_dc+th, sizes)) return 0;
+               v = z->huff_dc[th].values;
+            } else {
+               if (!build_huffman(z->huff_ac+th, sizes)) return 0;
+               v = z->huff_ac[th].values;
+            }
+            for (i=0; i < m; ++i)
+               v[i] = get8u(z->s);
+            L -= m;
+         }
+         return L==0;
+   }
+   // check for comment block or APP blocks
+   if ((m >= 0xE0 && m <= 0xEF) || m == 0xFE) {
+      skip(z->s, get16(z->s)-2);
+      return 1;
+   }
+   return 0;
 }

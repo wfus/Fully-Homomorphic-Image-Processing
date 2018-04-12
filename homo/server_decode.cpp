@@ -11,7 +11,7 @@ auto diff = std::chrono::steady_clock::now() - start;
 
 
 int main(int argc, char** argv) {
-
+    
     // Read encryption parameters from file
     int WIDTH = 0, HEIGHT = 0, CHANNELS=0;
     std::ifstream paramfile;
