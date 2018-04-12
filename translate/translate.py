@@ -125,9 +125,7 @@ def convert_expr_helper(expr, buf):
 
 
 TEST_LINES="""
-y = 0.299      * r + 0.587     * g + 0.114     * b  -  128.0;
-u =  (r * -0.168736) - (0.331264  * g) + (0.5       * b);
-v =  0.5       * r - 0.418688  * g - 0.081312  * b;
+result = A * (1.0 - t) + B * t;
 """
 
 PREFIX = "boaz"

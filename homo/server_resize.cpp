@@ -23,6 +23,8 @@ void save_three_blocks_interleaved_ycc(std::ofstream &file,
                                        std::vector<Ciphertext> &cb,
                                        std::vector<Ciphertext> &cr);
 
+typedef uint8_t uint8;
+
 
 
 int main(int argc, char** argv) {
