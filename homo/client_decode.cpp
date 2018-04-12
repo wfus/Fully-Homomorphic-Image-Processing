@@ -269,18 +269,21 @@ static int process_marker_fhe(jpeg *z, int m)
          exit(1);
 
       case 0xDD: // DRI - specify restart interval
-         if (get16(z->s) != 4) return e("bad DRI len","Corrupt JPEG");
+         if (get16(z->s) != 4)  {
+             std::cout << "bad DRI len - Corrupt JPEG" << std::endl;
+             exit(1);
+         }
          z->restart_interval = get16(z->s);
          return 1;
 
       case 0xDB: // DQT - define quantization table
          L = get16(z->s)-2;
          while (L > 0) {
-            int q = get8(z->s);
-            int p = q >> 4;
-            int t = q & 15,i;
-            if (p != 0) return e("bad DQT type","Corrupt JPEG");
-            if (t > 3) return e("bad DQT table","Corrupt JPEG");
+            int q = get8(z->s); // guessing that this gets the next uint8_t
+            int p = q >> 4;     // checking that q is not larger than 16 
+            int t = q & 15,i;   // guessing this is number of channels
+            if (p != 0) std::cout << "bad DQT type - Corrupt JPEG" << std::endl;
+            if (t > 3) std::cout << "bad DQT table - Corrupt JPEG" << std::endl;
             for (i=0; i < 64; ++i)
                z->dequant[t][dezigzag[i]] = get8u(z->s);
             #ifdef STBI_SIMD
@@ -299,7 +302,10 @@ static int process_marker_fhe(jpeg *z, int m)
             int q = get8(z->s);
             int tc = q >> 4;
             int th = q & 15;
-            if (tc > 1 || th > 3) return e("bad DHT header","Corrupt JPEG");
+            if (tc > 1 || th > 3) {
+                std::cout << "bad DHT header - Corrupt JPEG" << std::endl;
+                exit(1);
+            }
             for (i=0; i < 16; ++i) {
                sizes[i] = get8(z->s);
                m += sizes[i];
