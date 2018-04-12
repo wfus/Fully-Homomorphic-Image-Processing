@@ -12,11 +12,17 @@ include_directories(SEAL/SEAL)
 link_directories(SEAL/bin) 
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -O3 -DHAVE_CONFIG_H -std=c++11 -pthread -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -O3 -DHAVE_CONFIG_H -std=c++11 -pthread -g -Wno-narrowing")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
 # Make the FHE demo programs and put them to BIN
-add_executable(client homo/client.cpp ${LIBRARY_SOURCES})
-add_executable(server homo/server.cpp ${LIBRARY_SOURCES})
-target_link_libraries(client seal)
-target_link_libraries(server seal)
+add_executable(client_jpeg homo/client_jpeg.cpp ${LIBRARY_SOURCES})
+add_executable(server_jpeg homo/server_jpeg.cpp ${LIBRARY_SOURCES})
+target_link_libraries(client_jpeg seal)
+target_link_libraries(server_jpeg seal)
+
+
+add_executable(client_resize homo/client_resize.cpp ${LIBRARY_SOURCES})
+add_executable(server_resize homo/server_resize.cpp ${LIBRARY_SOURCES})
+target_link_libraries(client_resize seal)
+target_link_libraries(server_resize seal)
