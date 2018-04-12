@@ -10,8 +10,10 @@ auto start = std::chrono::steady_clock::now();
 auto diff = std::chrono::steady_clock::now() - start; 
 const bool VERBOSE = true;
 
+static uint8 *load_jpeg_image_fhe(jpeg *z, int *out_x, int *out_y, int *comp, int req_comp);
 static int decode_jpeg_image_fhe(jpeg *j);
 static int process_marker_fhe(jpeg *z, int m);
+static int parse_entropy_coded_data_fhe(jpeg *z);
 
 /*
 typedef struct
@@ -115,7 +117,8 @@ int main(int argc, const char** argv) {
         } 
         jpeg j; stbi s; j.s = &s;
         start_file(&s,f);
-        load_jpeg_image(&j, &width, &height, &actual_composition, requested_composition);
+        std::cout << "Loading in the JPEG..." << std::endl;
+        load_jpeg_image_fhe(&j, &width, &height, &actual_composition, requested_composition);
         fclose(f);
 
 
@@ -232,8 +235,9 @@ static int decode_jpeg_image_fhe(jpeg *j)
    m = get_marker(j);
    while (!EOI(m)) {
       if (SOS(m)) {
+         std::cout << "Called SOS on JPEG decoding..." <<std::endl;
          if (!process_scan_header(j)) return 0;
-         if (!parse_entropy_coded_data(j)) return 0;
+         if (!parse_entropy_coded_data_fhe(j)) return 0;
          if (j->marker == MARKER_none ) {
             // handle 0s at the end of image data from IP Kamera 9060
             while (!at_eof(j->s)) {
@@ -248,11 +252,118 @@ static int decode_jpeg_image_fhe(jpeg *j)
             // if we reach eof without hitting a marker, get_marker() below will fail and we'll eventually return 0
          }
       } else {
-         if (!process_marker(j, m)) return 0;
+         if (!process_marker_fhe(j, m)) return 0;
       }
       m = get_marker(j);
    }
    return 1;
+}
+
+static uint8 *load_jpeg_image_fhe(jpeg *z, int *out_x, int *out_y, int *comp, int req_comp)
+{
+   int n, decode_n;
+   // validate req_comp
+   if (req_comp < 0 || req_comp > 4) {
+       std::cout << "bad req_comp - Internal error" << std::endl;
+       exit(1);
+   }
+   z->s->img_n = 0;
+
+   // load a jpeg image from whichever source
+   if (!decode_jpeg_image_fhe(z)) { 
+       cleanup_jpeg(z); 
+       std::cout << "Problem Decoding JPEG" << std::endl;
+       exit(1);
+   }
+
+   // determine actual number of components to generate
+   n = req_comp ? req_comp : z->s->img_n;
+
+   if (z->s->img_n == 3 && n < 3)
+      decode_n = 1;
+   else
+      decode_n = z->s->img_n;
+
+   // resample and color-convert
+   {
+      int k;
+      uint i,j;
+      uint8 *output;
+      uint8 *coutput[4];
+
+      stbi_resample res_comp[4];
+
+      for (k=0; k < decode_n; ++k) {
+         stbi_resample *r = &res_comp[k];
+
+         // allocate line buffer big enough for upsampling off the edges
+         // with upsample factor of 4
+         z->img_comp[k].linebuf = (uint8 *) malloc(z->s->img_x + 3);
+         if (!z->img_comp[k].linebuf) { cleanup_jpeg(z); return epuc("outofmem", "Out of memory"); }
+
+         r->hs      = z->img_h_max / z->img_comp[k].h;
+         r->vs      = z->img_v_max / z->img_comp[k].v;
+         r->ystep   = r->vs >> 1;
+         r->w_lores = (z->s->img_x + r->hs-1) / r->hs;
+         r->ypos    = 0;
+         r->line0   = r->line1 = z->img_comp[k].data;
+
+         if      (r->hs == 1 && r->vs == 1) r->resample = resample_row_1;
+         else if (r->hs == 1 && r->vs == 2) r->resample = resample_row_v_2;
+         else if (r->hs == 2 && r->vs == 1) r->resample = resample_row_h_2;
+         else if (r->hs == 2 && r->vs == 2) r->resample = resample_row_hv_2;
+         else                               r->resample = resample_row_generic;
+      }
+
+      // can't error after this so, this is safe
+      output = (uint8 *) malloc(n * z->s->img_x * z->s->img_y + 1);
+      if (!output) { cleanup_jpeg(z); return epuc("outofmem", "Out of memory"); }
+
+      // now go ahead and resample
+      for (j=0; j < z->s->img_y; ++j) {
+         uint8 *out = output + n * z->s->img_x * j;
+         for (k=0; k < decode_n; ++k) {
+            stbi_resample *r = &res_comp[k];
+            int y_bot = r->ystep >= (r->vs >> 1);
+            coutput[k] = r->resample(z->img_comp[k].linebuf,
+                                     y_bot ? r->line1 : r->line0,
+                                     y_bot ? r->line0 : r->line1,
+                                     r->w_lores, r->hs);
+            if (++r->ystep >= r->vs) {
+               r->ystep = 0;
+               r->line0 = r->line1;
+               if (++r->ypos < z->img_comp[k].y)
+                  r->line1 += z->img_comp[k].w2;
+            }
+         }
+         if (n >= 3) {
+            uint8 *y = coutput[0];
+            if (z->s->img_n == 3) {
+               #ifdef STBI_SIMD
+               stbi_YCbCr_installed(out, y, coutput[1], coutput[2], z->s.img_x, n);
+               #else
+               YCbCr_to_RGB_row(out, y, coutput[1], coutput[2], z->s->img_x, n);
+               #endif
+            } else
+               for (i=0; i < z->s->img_x; ++i) {
+                  out[0] = out[1] = out[2] = y[i];
+                  out[3] = 255; // not used if n==3
+                  out += n;
+               }
+         } else {
+            uint8 *y = coutput[0];
+            if (n == 1)
+               for (i=0; i < z->s->img_x; ++i) out[i] = y[i];
+            else
+               for (i=0; i < z->s->img_x; ++i) *out++ = y[i], *out++ = 255;
+         }
+      }
+      cleanup_jpeg(z);
+      *out_x = z->s->img_x;
+      *out_y = z->s->img_y;
+      if (comp) *comp  = z->s->img_n; // report original components, not output
+      return output;
+   }
 }
 
 
@@ -284,14 +395,17 @@ static int process_marker_fhe(jpeg *z, int m)
             int t = q & 15,i;   // guessing this is number of channels
             if (p != 0) std::cout << "bad DQT type - Corrupt JPEG" << std::endl;
             if (t > 3) std::cout << "bad DQT table - Corrupt JPEG" << std::endl;
-            for (i=0; i < 64; ++i)
-               z->dequant[t][dezigzag[i]] = get8u(z->s);
-            #ifdef STBI_SIMD
-            for (i=0; i < 64; ++i)
-               z->dequant2[t][i] = z->dequant[t][i];
-            #endif
+            std::cout << "--- BEGINBLOCK ---" << std::endl;
+            for (i=0; i < 64; ++i) {
+                int next = get8u(z->s);
+                std::cout << next << " ";
+                if ((i+1) % 8 == 0) std::cout << std::endl;
+                z->dequant[t][dezigzag[i]] = next;
+            }
+            std::cout << "--- ENDBLOCK ---" << std::endl;
             L -= 65;
          }
+         std::cout << std::endl << "------------- DEFINE QUANTIZATION TABLE END --------------" << std::endl;
          return L==0;
 
       case 0xC4: // DHT - define huffman table
@@ -330,4 +444,67 @@ static int process_marker_fhe(jpeg *z, int m)
       return 1;
    }
    return 0;
+}
+
+static int parse_entropy_coded_data_fhe(jpeg *z)
+{
+   reset(z);
+   if (z->scan_n == 1) {
+      std::cout << "Parsing non-interleaved data..." << std::endl;
+      int i,j;
+      short data[64];
+      int n = z->order[0];
+      // non-interleaved data, we just need to process one block at a time,
+      // in trivial scanline order
+      // number of blocks to do just depends on how many actual "pixels" this
+      // component has, independent of interleaved MCU blocking and such
+      int w = (z->img_comp[n].x+7) >> 3;
+      int h = (z->img_comp[n].y+7) >> 3;
+      for (j=0; j < h; ++j) {
+         for (i=0; i < w; ++i) {
+            if (!decode_block(z, data, z->huff_dc+z->img_comp[n].hd, z->huff_ac+z->img_comp[n].ha, n)) return 0;
+            idct_block(z->img_comp[n].data+z->img_comp[n].w2*j*8+i*8, z->img_comp[n].w2, data, z->dequant[z->img_comp[n].tq]);
+            // every data block is an MCU, so countdown the restart interval
+            if (--z->todo <= 0) {
+               if (z->code_bits < 24) grow_buffer_unsafe(z);
+               // if it's NOT a restart, then just bail, so we get corrupt data
+               // rather than no data
+               if (!RESTART(z->marker)) return 1;
+               reset(z);
+            }
+         }
+      }
+   } else { // interleaved!
+      std::cout << "Parsing interleaved data..." << std::endl;
+      int i,j,k,x,y;
+      short data[64];
+      for (j=0; j < z->img_mcu_y; ++j) {
+         for (i=0; i < z->img_mcu_x; ++i) {
+            // scan an interleaved mcu... process scan_n components in order
+            for (k=0; k < z->scan_n; ++k) {
+               int n = z->order[k];
+               // scan out an mcu's worth of this component; that's just determined
+               // by the basic H and V specified for the component
+               for (y=0; y < z->img_comp[n].v; ++y) {
+                  for (x=0; x < z->img_comp[n].h; ++x) {
+                     int x2 = (i*z->img_comp[n].h + x)*8;
+                     int y2 = (j*z->img_comp[n].v + y)*8;
+                     if (!decode_block(z, data, z->huff_dc+z->img_comp[n].hd, z->huff_ac+z->img_comp[n].ha, n)) return 0;
+                     idct_block(z->img_comp[n].data+z->img_comp[n].w2*y2+x2, z->img_comp[n].w2, data, z->dequant[z->img_comp[n].tq]);
+                  }
+               }
+            }
+            // after all interleaved components, that's an interleaved MCU,
+            // so now count down the restart interval
+            if (--z->todo <= 0) {
+               if (z->code_bits < 24) grow_buffer_unsafe(z);
+               // if it's NOT a restart, then just bail, so we get corrupt data
+               // rather than no data
+               if (!RESTART(z->marker)) return 1;
+               reset(z);
+            }
+         }
+      }
+   }
+   return 1;
 }
