@@ -9,7 +9,12 @@ project(FHEVideo)
 include_directories(include)
 include_directories(homo)
 include_directories(SEAL/SEAL) 
-link_directories(SEAL/bin) 
+link_directories(SEAL/bin)
+
+
+# Use OpenCV for reading in files and debugging
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -O3 -DHAVE_CONFIG_H -std=c++11 -pthread -g -Wno-narrowing")
@@ -21,8 +26,12 @@ add_executable(server_jpeg homo/server_jpeg.cpp ${LIBRARY_SOURCES})
 target_link_libraries(client_jpeg seal)
 target_link_libraries(server_jpeg seal)
 
-
+# Picture resizing demos
 add_executable(client_resize homo/client_resize.cpp ${LIBRARY_SOURCES})
 add_executable(server_resize homo/server_resize.cpp ${LIBRARY_SOURCES})
-target_link_libraries(client_resize seal)
-target_link_libraries(server_resize seal)
+target_link_libraries(client_resize seal ${OpenCV_LIBS})
+target_link_libraries(server_resize seal ${OpenCV_LIBS})
+
+# Image testing, debugging only
+add_executable(image_test homo/image_test.cpp ${LIBRARY_SOURCES})
+target_link_libraries(image_test seal ${OpenCV_LIBS})
