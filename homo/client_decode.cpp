@@ -542,10 +542,12 @@ static int decode_block_fhe(jpeg *j, short data[64], huffman *hdc, huffman *hac,
          k += 16;
       } else {
          k += r;
+         std::cout << std::endl;
          // decode into unzigzag'd location
          data[dezigzag[k++]] = (short) extend_receive(j,s);
       }
    } while (k < 64);
+   std::cout << std::endl << "---------- END BLOCK ----------" << std::endl;
    return 1;
 }
 
@@ -553,7 +555,7 @@ static int decode_fhe(jpeg *j, huffman *h)
 {
    unsigned int temp;
    int c,k;
-
+    std::cout << std::hex << j->code_buffer << " " ;
    if (j->code_bits < 16) grow_buffer_unsafe(j);
 
    // look at the top FAST_BITS and determine what symbol ID it is,
