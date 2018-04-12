@@ -2,12 +2,16 @@
 #include "fhe_decode.h"
 #include "fhe_image.h"
 #include "jpge.h"
+#include <math.h>
+
 
 using namespace seal;
 using namespace cv;
 
 auto start = std::chrono::steady_clock::now();
 auto diff = std::chrono::steady_clock::now() - start;
+
+
 
 
 int main(int argc, char** argv) {
@@ -66,5 +70,57 @@ int main(int argc, char** argv) {
     
     myfile.close();
     outfile.close();  
+
+    int precision = 8;
+    double cosine[106];
+    int coefficients[4096];
+    for (int i=0; i < 106; i++) {
+            cosine[i] = std::cos(i*M_PI/16);
+    }
+    for(int i=0;i<8;i++){
+        for(int j=0;j<8;j++){
+            for(int u=0;u<8;u++){
+                for(int v=0;v<8;v++){
+                    int index = i*512 + j*64 + u*8 + v;
+                    double tmp = 1024 * cosine[(2*i+1)*u] * cosine[(2*j+1)*v];
+                    if (u==0 && v==0)
+                        tmp /= 8;
+                    else if (u>0 && v>0)
+                        tmp /= 4;
+                    else
+                        tmp *= 0.1767766952966368811;
+                    coefficients[index] = tmp;
+                }
+            }
+        }
+    }
+
     return 0;
+}
+
+
+// https://github.com/amirduran/jpeg-encoder-decoder/blob/master/jpegdecode.cpp
+void IDCT (int block[8][8], int transformedBlock[8][8]) {
+    int sum=0;
+    int counter=0;
+
+    for(int i=0;i<8;i++){
+        for(int j=0;j<8;j++){
+            sum=0;
+            for(int u=0;u<8;u++){
+                for(int v=0;v<8;v++){
+                    sum = sum + block[u][v] * coefficients[ counter++ ];
+                }
+            }
+
+            // All coefficients are multiplied by 1024 since they are int
+            sum = sum >> 10;
+
+            // Only 8 and 12-bit is supported by DCT per JPEG standard
+            if (precision == 8)
+                transformedBlock[i][j]=sum+128;
+            else if (precision == 12)
+                transformedBlock[i][j]=sum+2048;
+        }
+    }
 }
