@@ -14,6 +14,8 @@ static uint8 *load_jpeg_image_fhe(jpeg *z, int *out_x, int *out_y, int *comp, in
 static int decode_jpeg_image_fhe(jpeg *j);
 static int process_marker_fhe(jpeg *z, int m);
 static int parse_entropy_coded_data_fhe(jpeg *z);
+static int decode_block_fhe(jpeg *j, short data[64], huffman *hdc, huffman *hac, int b);
+static int decode_fhe(jpeg *j, huffman *h);
 
 /*
 typedef struct
@@ -462,7 +464,7 @@ static int parse_entropy_coded_data_fhe(jpeg *z)
       int h = (z->img_comp[n].y+7) >> 3;
       for (j=0; j < h; ++j) {
          for (i=0; i < w; ++i) {
-            if (!decode_block(z, data, z->huff_dc+z->img_comp[n].hd, z->huff_ac+z->img_comp[n].ha, n)) return 0;
+            if (!decode_block_fhe(z, data, z->huff_dc+z->img_comp[n].hd, z->huff_ac+z->img_comp[n].ha, n)) return 0;
             idct_block(z->img_comp[n].data+z->img_comp[n].w2*j*8+i*8, z->img_comp[n].w2, data, z->dequant[z->img_comp[n].tq]);
             // every data block is an MCU, so countdown the restart interval
             if (--z->todo <= 0) {
@@ -489,7 +491,7 @@ static int parse_entropy_coded_data_fhe(jpeg *z)
                   for (x=0; x < z->img_comp[n].h; ++x) {
                      int x2 = (i*z->img_comp[n].h + x)*8;
                      int y2 = (j*z->img_comp[n].v + y)*8;
-                     if (!decode_block(z, data, z->huff_dc+z->img_comp[n].hd, z->huff_ac+z->img_comp[n].ha, n)) return 0;
+                     if (!decode_block_fhe(z, data, z->huff_dc+z->img_comp[n].hd, z->huff_ac+z->img_comp[n].ha, n)) return 0;
                      idct_block(z->img_comp[n].data+z->img_comp[n].w2*y2+x2, z->img_comp[n].w2, data, z->dequant[z->img_comp[n].tq]);
                   }
                }
@@ -507,4 +509,91 @@ static int parse_entropy_coded_data_fhe(jpeg *z)
       }
    }
    return 1;
+}
+
+
+// decode one 64-entry block--
+static int decode_block_fhe(jpeg *j, short data[64], huffman *hdc, huffman *hac, int b)
+{
+   int diff,dc,k;
+   int t = decode_fhe(j, hdc);
+   if (t < 0) {
+       std::cout << "bad huffman code - Corrupt JPEG" << std::endl;
+       exit(1);
+   }
+   // 0 all the ac values now so we can do it 32-bits at a time
+   memset(data,0,64*sizeof(data[0]));
+
+   diff = t ? extend_receive(j, t) : 0;
+   dc = j->img_comp[b].dc_pred + diff;
+   j->img_comp[b].dc_pred = dc;
+   data[0] = (short) dc;
+
+   // decode AC components, see JPEG spec
+   k = 1;
+   do {
+      int r,s;
+      int rs = decode_fhe(j, hac);
+      if (rs < 0) return e("bad huffman code","Corrupt JPEG");
+      s = rs & 15;
+      r = rs >> 4;
+      if (s == 0) {
+         if (rs != 0xf0) break; // end block
+         k += 16;
+      } else {
+         k += r;
+         // decode into unzigzag'd location
+         data[dezigzag[k++]] = (short) extend_receive(j,s);
+      }
+   } while (k < 64);
+   return 1;
+}
+
+static int decode_fhe(jpeg *j, huffman *h)
+{
+   unsigned int temp;
+   int c,k;
+
+   if (j->code_bits < 16) grow_buffer_unsafe(j);
+
+   // look at the top FAST_BITS and determine what symbol ID it is,
+   // if the code is <= FAST_BITS
+   c = (j->code_buffer >> (32 - FAST_BITS)) & ((1 << FAST_BITS)-1);
+   k = h->fast[c];
+   if (k < 255) {
+      int s = h->size[k];
+      if (s > j->code_bits)
+         return -1;
+      j->code_buffer <<= s;
+      j->code_bits -= s;
+      return h->values[k];
+   }
+
+   // naive test is to shift the code_buffer down so k bits are
+   // valid, then test against maxcode. To speed this up, we've
+   // preshifted maxcode left so that it has (16-k) 0s at the
+   // end; in other words, regardless of the number of bits, it
+   // wants to be compared against something shifted to have 16;
+   // that way we don't need to shift inside the loop.
+   temp = j->code_buffer >> 16;
+   for (k=FAST_BITS+1 ; ; ++k)
+      if (temp < h->maxcode[k])
+         break;
+   if (k == 17) {
+      // error! code not found
+      j->code_bits -= 16;
+      return -1;
+   }
+
+   if (k > j->code_bits)
+      return -1;
+
+   // convert the huffman code to the symbol id
+   c = ((j->code_buffer >> (32 - k)) & bmask[k]) + h->delta[k];
+   assert((((j->code_buffer) >> (32 - h->size[c])) & bmask[h->size[c]]) == h->code[c]);
+
+   // convert the id to a symbol
+   j->code_bits -= k;
+   j->code_buffer <<= k;
+   return h->values[c];
 }
