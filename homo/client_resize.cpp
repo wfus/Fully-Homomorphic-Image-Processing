@@ -16,15 +16,24 @@ int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
     std::string test_filename("../image/boazbarak.jpg");
+    std::string input_filename("../image/zoop.txt");
+    int n_number_coeffs = N_NUMBER_COEFFS;
+    int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
+    int n_poly_base = POLY_BASE;
 
     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
         options.positional_help("[optional args]").show_positional_help();
 
+
         options.add_options()
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
-            ("f,file", "Filename for input file to be homomorphically encrypted", cxxopts::value<std::string>())
+            ("f,file", "Filename for input file to be decompressed", cxxopts::value<std::string>())
+            ("c,cfile", "Filename for ciphertext result file to be checked for correctness", cxxopts::value<std::string>())
+            ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
+            ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
+            ("base", "Polynomial base used for fractional encoding (essentially a number base)", cxxopts::value<int>())
             ("help", "Print help");
 
         auto result = options.parse(argc, argv);
@@ -33,9 +42,17 @@ int main(int argc, const char** argv) {
             std::cout << options.help({"", "Group"}) << std::endl;
             exit(0);
         }
-        if (result.count("file")) {
-            test_filename = result["file"].as<std::string>();
-        } 
+        if (!recieving && !sending) {
+            std::cout << "Please either toggle sending or recieving by using the flags: " << std::endl;
+            std::cout << "\t--send or --recieve" << std::endl;
+            std::cout << options.help({"", "Group"}) << std::endl;
+            exit(0);
+        }
+        if (result.count("file")) test_filename = result["file"].as<std::string>();
+        if (result.count("cfile")) input_filename = result["cfile"].as<std::string>();
+        if (result.count("ncoeff")) n_number_coeffs = result["ncoeff"].as<int>(); 
+        if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
+        if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
     } 
     catch (const cxxopts::OptionException& e) {
         std::cout << "error parsing options: " << e.what() << std::endl;
