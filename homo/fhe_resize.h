@@ -200,10 +200,7 @@ void ResizeImage (const SImageData &srcImage, SImageData &destImage, int dest_wi
     std::vector<std::vector<Ciphertext>> dest_cpixels;
     destImage.width = dest_width;
     destImage.height = dest_height;
-<<<<<<< HEAD
     destImage.pixels = dest_cpixels;
-=======
->>>>>>> 5f43911da09cbdcd48f9a348f6faddc5cd85627a
     for (int y = 0; y < destImage.height; ++y)
     {
         float v = float(y) / float(destImage.height - 1);
