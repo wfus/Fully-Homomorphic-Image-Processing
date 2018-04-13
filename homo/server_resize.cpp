@@ -134,6 +134,7 @@ int main(int argc, const char** argv) {
     // BADBROKEN: Reads it in all at once, CHANGE THIS LATER
     // THIS IS NOT HALAL AT ALL
     // ABSOLUTELY NOT 
+    std::cout << "Loading Ciphertexts now..." << std::endl; 
     SImageData im;
     im.width = original_width;
     im.height = original_height;
@@ -148,9 +149,19 @@ int main(int argc, const char** argv) {
     }
     std::vector<std::vector<Ciphertext>> cpixels = {red, green, blue}; 
     im.pixels = cpixels;
+    std::cout << "Read in Ciphertexts..." << std::endl;
 
     SImageData resize_im;
-
+    ResizeImage(
+        im,
+        resize_im,
+        resized_width,
+        resized_height,
+        BILINEAR,
+        evaluator,
+        encoder,
+        encryptor
+    );
 
 
 
