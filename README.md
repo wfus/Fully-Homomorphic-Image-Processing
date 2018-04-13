@@ -1,14 +1,18 @@
-# Fast Homomorphic Video Transcoding 
+# Fast Homomorphic Image Processing
+These days neural networks and fully homomorphic encryption are a meme. For example, Microsoft demonstrated with Cryptonets of a neural network generating predictions fully homomorphically on the MNIST dataset. However, it would be useful to have a way to preprocess images homomorphically. Consider the use case where an edge device sends a homomorphically encrypted image to a server that runs a prediction algorithm with two neural networks that take in different sized features, as is common. It would be prohibitive to make the edge device homomorphically encrypt two copies of the images, since that would be prohibitively expensive. Therefore, having proprocessing and feature extraction computed homomorphically will provide much more flexibility for homomorphic neural nets.  
 
-## Idea behind FHE Video Transcoding
-Video transcoding cuts the frames of the video into blocks, which is then compressed using frequency analysis. To compress video homomorphically, we implement the [discrete cosine transform](https://en.wikipedia.org/wiki/Discrete_cosine_transform) 
+### Homomorphic Bilinear Image Resizing
+
+
+### Homomorphic Bicubic Image Resizing
+
+### Homomorphic JPEG-2 Encoding
+Image compression cuts the frames of the video into blocks, which is then compressed using frequency analysis. To compress video homomorphically, we implement the [discrete cosine transform](https://en.wikipedia.org/wiki/Discrete_cosine_transform) 
 and multiply by a [quantization](https://en.wikipedia.org/wiki/Quantization_(image_processing)) factor to throw away the higher frequencies of our image. 
 
-###  Simple Example: JPEG-2 Encoding
-
-Since JPEG encoding is similar, we implemented FHE video transcoding for JPEG encoding first. 
-
 ![JPEG workflow](docs/jpgworkflow.png)
+
+
 
 ## Installation Instructions
 
@@ -35,3 +39,4 @@ We used a few external libraries and source code, here are links to their respec
 * [Lecture Notes](http://www.intensecrypto.org/public/index.html) by Boaz Barak that got us started
 * [ffmpeg](https://www.ffmpeg.org/), video transcoding and audio processing library
 * [C++ Command Line Options](https://github.com/jarro2783/cxxopts), for quality of life
+* [Image Resizing](https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/) by demofox
