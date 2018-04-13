@@ -16,6 +16,7 @@ int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
     std::string test_filename("./image/boazbarak.jpg");
+    std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
@@ -32,7 +33,8 @@ int main(int argc, const char** argv) {
         options.add_options()
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
-            ("f,file", "Filename for input file to be decompressed", cxxopts::value<std::string>())
+            ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
+            ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
             ("c,cfile", "Filename for ciphertext result file to be checked for correctness", cxxopts::value<std::string>())
             ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
@@ -56,6 +58,7 @@ int main(int argc, const char** argv) {
             exit(0);
         }
         if (result.count("file")) test_filename = result["file"].as<std::string>();
+        if (result.count("outfile")) ctext_outfile = result["outfile"].as<std::string>();
         if (result.count("cfile")) ctext_infile = result["cfile"].as<std::string>();
         if (result.count("ncoeff")) n_number_coeffs = result["ncoeff"].as<int>(); 
         if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
@@ -135,7 +138,7 @@ int main(int argc, const char** argv) {
 
         // Write to ciphertext as RGBRGBRGBRGB row by row. 
         std::ofstream myfile;
-        myfile.open("./image/nothingpersonnel.txt");
+        myfile.open(ctext_outfile.c_str());
         std::cout << width << " " << height << std::endl;
         start = std::chrono::steady_clock::now(); 
         Ciphertext c;
