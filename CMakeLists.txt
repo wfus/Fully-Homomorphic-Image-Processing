@@ -32,6 +32,13 @@ add_executable(server_resize homo/server_resize.cpp ${LIBRARY_SOURCES})
 target_link_libraries(client_resize seal ${OpenCV_LIBS})
 target_link_libraries(server_resize seal ${OpenCV_LIBS})
 
+# JPEG Decompression Demos 
+add_executable(decode_client homo/client_decode.cpp ${LIBRARY_SOURCES})
+add_executable(decode_server homo/server_decode.cpp ${LIBRARY_SOURCES})
+target_link_libraries(decode_client seal ${OpenCV_LIBS})
+target_link_libraries(decode_server seal ${OpenCV_LIBS})
+
+
 # Image testing, debugging only
 add_executable(image_test homo/image_test.cpp ${LIBRARY_SOURCES})
 target_link_libraries(image_test seal ${OpenCV_LIBS})
