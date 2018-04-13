@@ -22,6 +22,8 @@ int main(int argc, const char** argv) {
     int n_poly_base = POLY_BASE;
     int plain_modulus = PLAIN_MODULUS;
     int coeff_modulus = COEFF_MODULUS;
+    int resized_width = 0;
+    int resized_height = 0;
 
     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
@@ -36,6 +38,8 @@ int main(int argc, const char** argv) {
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
             ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
             ("pmod", "Plaintext modulus", cxxopts::value<int>())
+            ("width", "width of resized image", cxxopts::value<int>())
+            ("height", "height of resized image", cxxopts::value<int>())
             ("base", "Polynomial base used for fractional encoding (essentially a number base)", cxxopts::value<int>())
             ("help", "Print help");
 
@@ -58,6 +62,20 @@ int main(int argc, const char** argv) {
         if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
         if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
         if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
+        
+        
+        if (result.count("width")) { 
+            resized_width = result["width"].as<int>(); 
+        } else {
+            std::cout << "Please enter the width/height of the resized image..." << std::endl;
+            std::cout << "\t Use --help to see the options." << std::endl;
+        }
+        if (result.count("height")) { 
+            resized_height = result["height"].as<int>(); 
+        } else {
+            std::cout << "Please enter the width/height of the resized image..." << std::endl;
+            std::cout << "\t Use --help to see the options." << std::endl;
+        }
     } 
     catch (const cxxopts::OptionException& e) {
         std::cout << "error parsing options: " << e.what() << std::endl;
@@ -132,18 +150,12 @@ int main(int argc, const char** argv) {
         std::cout << "EncryptWritePerPixel: " << chrono::duration<double, milli>(diff).count()/(width*height) << std::endl;
         myfile.close();
     }
+
+    /******************************************************************************
+     * Recieving,      SERVER --> CLIENT                                          *
+     ******************************************************************************/
     else
     {
-        // Read encryption parameters from file
-        int WIDTH = 0, HEIGHT = 0;
-        std::ifstream paramfile;
-        paramfile.open("./keys/params.txt");
-        paramfile >> WIDTH;
-        paramfile >> HEIGHT;
-        std::cout << WIDTH << " " << HEIGHT << std::endl;
-        paramfile.close();
-
-
         // Encryption Parameters
         EncryptionParameters params;
         params.set_poly_modulus("1x^8192 + 1");
@@ -174,16 +186,21 @@ int main(int argc, const char** argv) {
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
         // Read in the image as RGB interleaved...
+        // Assuming that there are three channels
         std::ifstream instream;
         instream.open(ctext_infile.c_str());
-
+        std::vector<uint8_t> decrypted_image;
         Plaintext p;
         Ciphertext c;
-        for (int i = 0; i < WIDTH * HEIGHT; i++) {
+        for (int i = 0; i < resized_width * resized_height * 3; i++) {
             c.load(instream);
             decryptor.decrypt(c, p);
+            decrypted_image.push_back((uint8_t) encoder.decode(p));
         }
         instream.close();
+
+        // Display our decrypted image!
+        show_image_rgb(resized_width, resized_height, decrypted_image);
     }
     return 0;
 }
