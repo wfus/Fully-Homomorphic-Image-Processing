@@ -46,6 +46,21 @@ void show_image(const char* im_name) {
     waitKey(0);
 }
 
+void show_image_rgb(int width, int height, std::vector<uint8_t> interleaved) {
+    std::vector<uint8_t> bgr_interleaved;
+    for (int i = 0; i < interleaved.size(); i += 3) {
+        bgr_interleaved.push_back(interleaved[i+2]);
+        bgr_interleaved.push_back(interleaved[i+1]);
+        bgr_interleaved.push_back(interleaved[i+0]);
+    }
+    uint8_t* bgr_array = &bgr_interleaved[0];
+    Mat image(height, width, CV_8UC3, bgr_array);
+    namedWindow("Display Image", WINDOW_AUTOSIZE);
+    imshow("Display Image", image);
+    waitKey(0);
+}
+
+
 void show_image_rgb(int width, int height, 
                     std::vector<uint8_t> &red, 
                     std::vector<uint8_t> &green, 

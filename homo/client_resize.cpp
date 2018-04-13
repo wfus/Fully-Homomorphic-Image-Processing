@@ -15,8 +15,8 @@ std::vector<double> read_image(std::string fname);
 int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
-    std::string test_filename("../image/boazbarak.jpg");
-    std::string ctext_infile("../image/zoop.txt");
+    std::string test_filename("./image/boazbarak.jpg");
+    std::string ctext_infile("./image/zoop.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
@@ -70,6 +70,7 @@ int main(int argc, const char** argv) {
         uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
         // The image will be interleaved r g b r g b ...
         std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
+        int channels = requested_composition;
 
         // Encryption Parameters
         EncryptionParameters params;
@@ -80,19 +81,18 @@ int main(int argc, const char** argv) {
         print_parameters(context);
 
         std::ofstream paramfile; 
-        paramfile.open("../keys/params.txt");
+        paramfile.open("./keys/params.txt");
         paramfile << width << " ";
         paramfile << height << " ";
         paramfile << actual_composition << " ";
         paramfile << plain_modulus << std::endl;
         paramfile.close();
 
-
         // Generate keys
         // and save them to file
         std::ofstream pkfile, skfile;
-        pkfile.open("../keys/pubkey.txt");
-        skfile.open("../keys/seckey.txt");
+        pkfile.open("./keys/pubkey.txt");
+        skfile.open("./keys/seckey.txt");
         start = std::chrono::steady_clock::now(); 
         KeyGenerator keygen(context);
         auto public_key = keygen.public_key();
@@ -115,49 +115,21 @@ int main(int argc, const char** argv) {
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
 
-        // Write the ciphertext to file block by block - since most times
-        // ciphertext doesn't fit directly in RAM
-        // Write RED 8x8 BLOCK, GREEN 8x8 BLOCK, then BLUE 8x8 BLOCK
-        // Repeats until the entire image is converted to ciphertext. 
-        std::vector<double> red, green, blue; 
-        
-        for (int i = 0; i < width * height * actual_composition; i+=3) {
-            red.push_back((double) image_data[i]);
-            green.push_back((double) image_data[i+1]);
-            blue.push_back((double) image_data[i+2]);
-        }
-        std::vector<std::vector<double>> red_blocks, green_blocks, blue_blocks;
-        red_blocks = split_image_eight_block(red, width, height);
-        green_blocks = split_image_eight_block(green, width, height);
-        blue_blocks = split_image_eight_block(blue, width, height);
-
+        // Write to ciphertext as RGBRGBRGBRGB row by row. 
         std::ofstream myfile;
-        myfile.open("../image/nothingpersonnel.txt");
+        myfile.open("./image/nothingpersonnel.txt");
         std::cout << width << " " << height << std::endl;
         start = std::chrono::steady_clock::now(); 
         Ciphertext c;
-        double conv;
-        for (int i = 0; i < red_blocks.size(); i++) {
-            for (int j = 0; j < red_blocks[i].size(); j++) {
-                conv = red_blocks[i][j];
-                encryptor.encrypt(encoder.encode(conv), c);
-                c.save(myfile);
-            }
-            for (int j = 0; j < green_blocks[i].size(); j++) {
-                conv = green_blocks[i][j];
-                encryptor.encrypt(encoder.encode(conv), c);
-                c.save(myfile);
-            }
-            for (int j = 0; j < blue_blocks[i].size(); j++) {
-                conv = blue_blocks[i][j];
-                encryptor.encrypt(encoder.encode(conv), c);
-                c.save(myfile);
-            }
-            if (i % 10 == 0) std::cout << "Encoded "<< i << " blocks..." << std::endl;
+        for (int i = 0; i < width * height * channels; i++) {
+            encryptor.encrypt(encoder.encode(image_data[i]), c);
+            c.save(myfile); 
+            if (i % 100 == 0) std::cout << "Encoded "<< i << " intensities..." << std::endl;
         }
         diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "Ciphertext write: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+        std::cout << "EncryptWrite: ";
+        std::cout << chrono::duration<double, milli>(diff).count() << std::endl;
+        std::cout << "EncryptWritePerPixel: " << chrono::duration<double, milli>(diff).count()/(width*height) << std::endl;
         myfile.close();
     }
     else
@@ -165,7 +137,7 @@ int main(int argc, const char** argv) {
         // Read encryption parameters from file
         int WIDTH = 0, HEIGHT = 0;
         std::ifstream paramfile;
-        paramfile.open("../keys/params.txt");
+        paramfile.open("./keys/params.txt");
         paramfile >> WIDTH;
         paramfile >> HEIGHT;
         std::cout << WIDTH << " " << HEIGHT << std::endl;
@@ -183,8 +155,8 @@ int main(int argc, const char** argv) {
 
         // Get keys
         std::ifstream pkfile, skfile;
-        pkfile.open("../keys/pubkey.txt");
-        skfile.open("../keys/seckey.txt");
+        pkfile.open("./keys/pubkey.txt");
+        skfile.open("./keys/seckey.txt");
         start = std::chrono::steady_clock::now(); 
         PublicKey public_key;
         SecretKey secret_key;
@@ -201,6 +173,7 @@ int main(int argc, const char** argv) {
 
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
+        // Read in the image as RGB interleaved...
         std::ifstream instream;
         instream.open(ctext_infile.c_str());
 
