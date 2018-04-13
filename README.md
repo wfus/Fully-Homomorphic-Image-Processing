@@ -17,6 +17,15 @@ We use Microsoft's [SEAL](https://www.microsoft.com/en-us/research/publication/s
 
 We used ```g++-7``` as our default compiler for everything. If you want to change this change the ```CXX=``` portions of the makefile and the install script. The install script ```install.sh``` should update the git submodule containing SEAL and build it automatically. Then, you should be able to make our example programs in ```homo/```.
 
+### Dependencies
+You will also need opencv installed as a library. for Mac OSX, install opencv via brew:
+```
+brew install opencv
+```
+On Debian, install using apt
+```
+sudo apt install opencv -y
+```
 
 ## Acknowledgements and External Sources
 
