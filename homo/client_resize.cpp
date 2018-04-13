@@ -20,6 +20,8 @@ int main(int argc, const char** argv) {
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
+    int plain_modulus = PLAIN_MODULUS;
+    int coeff_modulus = COEFF_MODULUS;
 
     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
@@ -53,6 +55,8 @@ int main(int argc, const char** argv) {
         if (result.count("cfile")) ctext_infile = result["cfile"].as<std::string>();
         if (result.count("ncoeff")) n_number_coeffs = result["ncoeff"].as<int>(); 
         if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
+        if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
+        if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
         if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
     } 
     catch (const cxxopts::OptionException& e) {
@@ -70,8 +74,8 @@ int main(int argc, const char** argv) {
         // Encryption Parameters
         EncryptionParameters params;
         params.set_poly_modulus("1x^8192 + 1");
-        params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
-        params.set_plain_modulus(PLAIN_MODULUS);
+        params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
+        params.set_plain_modulus(plain_modulus);
         SEALContext context(params);
         print_parameters(context);
 
@@ -80,7 +84,7 @@ int main(int argc, const char** argv) {
         paramfile << width << " ";
         paramfile << height << " ";
         paramfile << actual_composition << " ";
-        paramfile << PLAIN_MODULUS << std::endl;
+        paramfile << plain_modulus << std::endl;
         paramfile.close();
 
 
@@ -171,8 +175,8 @@ int main(int argc, const char** argv) {
         // Encryption Parameters
         EncryptionParameters params;
         params.set_poly_modulus("1x^8192 + 1");
-        params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
-        params.set_plain_modulus(PLAIN_MODULUS);
+        params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
+        params.set_plain_modulus(plain_modulus);
         SEALContext context(params);
         print_parameters(context);
 
