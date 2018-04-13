@@ -1,5 +1,6 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
+#include "fhe_resize.h"
 #include "jpge.h"
 #include "stb_image.c"
 #include "cxxopts.h"
@@ -8,26 +9,21 @@ using namespace seal;
 
 auto start = std::chrono::steady_clock::now();
 auto diff = std::chrono::steady_clock::now() - start;
-void fhe_jpg(std::vector<Ciphertext> &y,
-             std::vector<Ciphertext> &cb,
-             std::vector<Ciphertext> &cr,
-             int width, 
-             int height,
-             Evaluator &evaluator,
-             FractionalEncoder &encoder,
-             Encryptor &encryptor);
-void save_computed_blocks_interleaved_ycc(std::vector<std::vector<Ciphertext>> &y,
-                                          std::vector<std::vector<Ciphertext>> &cb,
-                                          std::vector<std::vector<Ciphertext>> &cr);
-void save_three_blocks_interleaved_ycc(std::ofstream &file,
-                                       std::vector<Ciphertext> &y,
-                                       std::vector<Ciphertext> &cb,
-                                       std::vector<Ciphertext> &cr);
-
-
 
 
 int main(int argc, const char** argv) {
+    
+    // Read encryption parameters from file
+    int original_width = 0, original_height = 0, channels = 0;
+    std::ifstream paramfile;
+    paramfile.open("./keys/params.txt");
+    paramfile >> original_width;
+    paramfile >> original_height;
+    paramfile >> channels;
+    std::cout << original_width << " " << original_height << std::endl;
+    assert(channels == 3); assert(original_width != 0); assert(original_height != 0);
+    paramfile.close();
+    
     std::string ctext_infile("./image/nothingpersonnel.txt");
     std::string ctext_outfile("./image/zoop.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
@@ -49,8 +45,8 @@ int main(int argc, const char** argv) {
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
             ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
             ("pmod", "Plaintext modulus", cxxopts::value<int>())
-            ("width", "width of resized image", cxxopts::value<int>())
-            ("height", "height of resized image", cxxopts::value<int>())
+            ("w,width", "width of resized image", cxxopts::value<int>())
+            ("h,height", "height of resized image", cxxopts::value<int>())
             ("base", "Polynomial base used for fractional encoding (essentially a number base)", cxxopts::value<int>())
             ("help", "Print help");
 
@@ -68,7 +64,6 @@ int main(int argc, const char** argv) {
         if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
         if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
         if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
-        
         
         if (result.count("width")) { 
             resized_width = result["width"].as<int>(); 
@@ -125,8 +120,8 @@ int main(int argc, const char** argv) {
     outfile.open(ctext_outfile.c_str()); 
     std::ifstream infile;
     infile.open(ctext_infile.c_str());
-    Ciphertext c;
 
+    // TODO: IMPLEMENT THE SYSTEM BELOW
     /************************************************************************
      * Bicubic and Bilinear Interpolation use only at most the four pixels
      * in the surrounding area at most. Therefore, we only want to load as 
@@ -135,6 +130,27 @@ int main(int argc, const char** argv) {
      * resized image and then remove the ciphertexts that will not be needed
      * anymore.
      ************************************************************************/
+
+    // BADBROKEN: Reads it in all at once, CHANGE THIS LATER
+    // THIS IS NOT HALAL AT ALL
+    // ABSOLUTELY NOT 
+    SImageData im;
+    im.width = original_width;
+    im.height = original_height;
+    std::vector<Ciphertext> red, green, blue;
+    for (int i = 0; i < original_width * original_height; i++) {
+        Ciphertext c; c.load(infile);
+        red.push_back(c);
+        c.load(infile);
+        green.push_back(c);
+        c.load(infile);
+        blue.push_back(c);
+    }
+    std::vector<std::vector<Ciphertext>> cpixels = {red, green, blue}; 
+    im.pixels = cpixels;
+
+    SImageData resize_im;
+
 
 
 
