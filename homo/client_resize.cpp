@@ -67,9 +67,6 @@ int main(int argc, const char** argv) {
         // The image will be interleaved r g b r g b ...
         std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
 
-        //jo_write_jpg("../image/boazbarak.jpg", image_data, width, height, 3, 100);
-
-
         // Encryption Parameters
         EncryptionParameters params;
         params.set_poly_modulus("1x^8192 + 1");
@@ -161,13 +158,6 @@ int main(int argc, const char** argv) {
     }
     else
     {
-        // We are recieving the results and then doing the actual compression
-        // Note that it is very difficult to do compression with purely FHE, 
-        // it is possible to do decompression though.
-        const char* outfile = "../image/new_boazzzzzz.jpg";
-
-        int QUALITY = 0;
-
         // Read encryption parameters from file
         int WIDTH = 0, HEIGHT = 0;
         std::ifstream paramfile;
@@ -208,12 +198,8 @@ int main(int argc, const char** argv) {
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
         std::ifstream instream;
-        std::ofstream outstream;
         instream.open(ctext_infile.c_str());
 
-        int bitBuf=0, bitCnt=0, DCY=0, DCU=0, DCV=0;
-        double v = 0;
-        start = std::chrono::steady_clock::now(); 
         Plaintext p;
         Ciphertext c;
         for (int i = 0; i < WIDTH * HEIGHT; i++) {
