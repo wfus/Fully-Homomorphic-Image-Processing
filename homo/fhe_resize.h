@@ -85,7 +85,7 @@ void show_image_rgb(int width, int height,
     waitKey(0);
 }
 
-inline void CubicHermite(Ciphertext &r, Ciphertext A, Ciphertext B, Ciphertext C, Ciphertext D, Ciphertext t,
+inline void CubicHermite(Ciphertext &r, Ciphertext &A, Ciphertext &B, Ciphertext &C, Ciphertext &D, Ciphertext &t,
                             Evaluator &evaluator, 
                             FractionalEncoder &encoder, 
                             Encryptor &encryptor) {
@@ -99,7 +99,7 @@ inline void CubicHermite(Ciphertext &r, Ciphertext A, Ciphertext B, Ciphertext C
 }
 
 
-inline void Lerp(Ciphertext &r, Ciphertext A, Ciphertext B, Ciphertext t,
+inline void Lerp(Ciphertext &r, Ciphertext &A, Ciphertext &B, Ciphertext &t,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
                     Encryptor &encryptor) {
