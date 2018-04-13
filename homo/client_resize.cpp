@@ -16,7 +16,7 @@ int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
     std::string test_filename("../image/boazbarak.jpg");
-    std::string input_filename("../image/zoop.txt");
+    std::string ctext_infile("../image/zoop.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
@@ -25,7 +25,6 @@ int main(int argc, const char** argv) {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
         options.positional_help("[optional args]").show_positional_help();
 
-
         options.add_options()
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
@@ -33,6 +32,8 @@ int main(int argc, const char** argv) {
             ("c,cfile", "Filename for ciphertext result file to be checked for correctness", cxxopts::value<std::string>())
             ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
+            ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
+            ("pmod", "Plaintext modulus", cxxopts::value<int>())
             ("base", "Polynomial base used for fractional encoding (essentially a number base)", cxxopts::value<int>())
             ("help", "Print help");
 
@@ -49,7 +50,7 @@ int main(int argc, const char** argv) {
             exit(0);
         }
         if (result.count("file")) test_filename = result["file"].as<std::string>();
-        if (result.count("cfile")) input_filename = result["cfile"].as<std::string>();
+        if (result.count("cfile")) ctext_infile = result["cfile"].as<std::string>();
         if (result.count("ncoeff")) n_number_coeffs = result["ncoeff"].as<int>(); 
         if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
         if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
@@ -163,7 +164,6 @@ int main(int argc, const char** argv) {
         // We are recieving the results and then doing the actual compression
         // Note that it is very difficult to do compression with purely FHE, 
         // it is possible to do decompression though.
-        const char* infile = "../image/zoop.txt";
         const char* outfile = "../image/new_boazzzzzz.jpg";
 
         int QUALITY = 0;
@@ -203,32 +203,24 @@ int main(int argc, const char** argv) {
 
         Encryptor encryptor(context, public_key);
         Evaluator evaluator(context);
-        // FOR DEBUGGING ONLY!
         Decryptor decryptor(context, secret_key);
 
-        // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)
-        // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
-        // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
-
-        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
+        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
         std::ifstream instream;
         std::ofstream outstream;
-        instream.open(infile);
+        instream.open(ctext_infile.c_str());
 
         int bitBuf=0, bitCnt=0, DCY=0, DCU=0, DCV=0;
         double v = 0;
         start = std::chrono::steady_clock::now(); 
+        Plaintext p;
+        Ciphertext c;
         for (int i = 0; i < WIDTH * HEIGHT; i++) {
-            Ciphertext c;
             c.load(instream);
-            Plaintext p;
             decryptor.decrypt(c, p);
-            p.save(outstream);
         }
         instream.close();
-        outstream.close();
     }
-
     return 0;
 }

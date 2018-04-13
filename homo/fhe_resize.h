@@ -21,6 +21,17 @@ using namespace cv;
 #define CLAMP(v, min, max) if (v < min) { v = min; } else if (v > max) { v = max; } 
 
 
+void resize_image_opencv(const char* im_name, int new_width, int new_height) {
+    Mat image;
+    Mat resized_image;
+    image = imread(im_name, IMREAD_COLOR);
+    Size size(new_width, new_height);
+    resize(image, resized_image, size, 0, 0, INTER_LINEAR);
+    imshow("LOL", resized_image);
+    waitKey(0);
+}
+
+
 void show_image(const char* im_name) {
 
     Mat image;
@@ -217,5 +228,6 @@ void ResizeImage (const SImageData &srcImage, SImageData &destImage, int dest_wi
         }
     }
 }
+
 
 #endif
