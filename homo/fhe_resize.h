@@ -62,12 +62,12 @@ inline void CubicHermite(Ciphertext &r, Ciphertext A, Ciphertext B, Ciphertext C
                             Evaluator &evaluator, 
                             FractionalEncoder &encoder, 
                             Encryptor &encryptor) {
-    Ciphertext a, b, c, result
+    Ciphertext a, b, c, result;
     Ciphertext boaz1(A); evaluator.multiply_plain(boaz1, encoder.encode(2.0)); Ciphertext boaz2(boaz1); evaluator.sub_plain(boaz2, encoder.encode(0.0)); Ciphertext boaz3(B); evaluator.multiply_plain(boaz3, encoder.encode(3.0)); Ciphertext boaz4(boaz3); evaluator.multiply_plain(boaz4, encoder.encode(2.0)); Ciphertext boaz5(boaz2); evaluator.add(boaz5, boaz4); Ciphertext boaz6(C); evaluator.multiply_plain(boaz6, encoder.encode(3.0)); Ciphertext boaz7(boaz6); evaluator.multiply_plain(boaz7, encoder.encode(2.0)); Ciphertext boaz8(boaz5); evaluator.sub(boaz8, boaz7); Ciphertext boaz9(D); evaluator.multiply_plain(boaz9, encoder.encode(2.0)); Ciphertext boaz10(boaz8); evaluator.add(boaz10, boaz9); a = boaz10;
     Ciphertext boaz11(B); evaluator.multiply_plain(boaz11, encoder.encode(5.0)); Ciphertext boaz12(boaz11); evaluator.multiply_plain(boaz12, encoder.encode(2.0)); Ciphertext boaz13(A); evaluator.sub(boaz13, boaz12); Ciphertext boaz14(C); evaluator.multiply_plain(boaz14, encoder.encode(2.0)); Ciphertext boaz15(boaz13); evaluator.add(boaz15, boaz14); Ciphertext boaz16(D); evaluator.multiply_plain(boaz16, encoder.encode(2.0)); Ciphertext boaz17(boaz15); evaluator.sub(boaz17, boaz16); b = boaz17;
     Ciphertext boaz18(A); evaluator.multiply_plain(boaz18, encoder.encode(2.0)); Ciphertext boaz19(boaz18); evaluator.sub_plain(boaz19, encoder.encode(0.0)); Ciphertext boaz20(C); evaluator.multiply_plain(boaz20, encoder.encode(2.0)); Ciphertext boaz21(boaz19); evaluator.add(boaz21, boaz20); c = boaz21;
     Ciphertext boaz22(a); evaluator.multiply(boaz22, t); Ciphertext boaz23(boaz22); evaluator.multiply(boaz23, t); Ciphertext boaz24(boaz23); evaluator.multiply(boaz24, t); Ciphertext boaz25(b); evaluator.multiply(boaz25, t); Ciphertext boaz26(boaz25); evaluator.multiply(boaz26, t); Ciphertext boaz27(boaz24); evaluator.add(boaz27, boaz26); Ciphertext boaz28(c); evaluator.multiply(boaz28, t); Ciphertext boaz29(boaz27); evaluator.add(boaz29, boaz28); Ciphertext boaz30(boaz29); evaluator.add(boaz30, B); result = boaz30;
-    *r = result;
+    r = result;
     return;
 }
 
@@ -78,7 +78,7 @@ inline void Lerp(Ciphertext &r, Ciphertext A, Ciphertext B, Ciphertext t,
                     Encryptor &encryptor) {
     Ciphertext result;
     Ciphertext boaz1(t); evaluator.sub_plain(boaz1, encoder.encode(1.0)); Ciphertext boaz2(A); evaluator.multiply(boaz2, boaz1); Ciphertext boaz3(B); evaluator.multiply(boaz3, t); Ciphertext boaz4(boaz2); evaluator.add(boaz4, boaz3); result = boaz4;
-    *r = result;
+    r = result;
     return;
 }
 
