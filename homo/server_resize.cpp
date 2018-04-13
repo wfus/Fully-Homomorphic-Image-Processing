@@ -27,7 +27,7 @@ void save_three_blocks_interleaved_ycc(std::ofstream &file,
 
 
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
     std::string ctext_infile("./image/nothingpersonnel.txt");
     std::string ctext_outfile("./image/zoop.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     std::ofstream outfile;
     outfile.open(ctext_outfile.c_str()); 
     std::ifstream infile;
-    myfile.open(ctext_infile.c_str());
+    infile.open(ctext_infile.c_str());
     Ciphertext c;
 
     /************************************************************************
@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
      * resized image and then remove the ciphertexts that will not be needed
      * anymore.
      ************************************************************************/
-    
+
 
 
     infile.close();
