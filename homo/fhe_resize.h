@@ -12,6 +12,9 @@
 #include "seal/seal.h"
 #include <opencv2/opencv.hpp>
 
+#define BILINEAR 0
+#define BICUBIC 1
+
 using namespace seal;
 using namespace cv;
 
@@ -69,7 +72,7 @@ inline void CubicHermite(Ciphertext &r, Ciphertext A, Ciphertext B, Ciphertext C
 }
 
 
-inline void LERP(Ciphertext &r, Ciphertext A, Ciphertext B, Ciphertext t,
+inline void Lerp(Ciphertext &r, Ciphertext A, Ciphertext B, Ciphertext t,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
                     Encryptor &encryptor) {
@@ -99,13 +102,17 @@ void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float 
                     Encryptor &encryptor)
 {
     // calculate coordinates -> also need to offset by half a pixel to keep image from shifting down and left half a pixel
-    float x = (u * image.width) - 0.5f;
+    float x = (u * image.width) - 0.5;
     int xint = int(x);
-    float xfract = x - floor(x);
+    Ciphertext xfract;
+    encryptor.encrypt(encoder.encode(x - floor(x)), xfract);
+    // float xfract = x - floor(x);
  
-    float y = (v * image.height) - 0.5f;
+    float y = (v * image.height) - 0.5;
     int yint = int(y);
-    float yfract = y - floor(y);
+    Ciphertext yfract;
+    encryptor.encrypt(encoder.encode(y - floor(y)), yfract);
+    // float yfract = y - floor(y);
  
     // get pixels
     auto p00 = GetPixelClamped(image, xint + 0, yint + 0);
@@ -134,11 +141,15 @@ void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float
     // calculate coordinates -> also need to offset by half a pixel to keep image from shifting down and left half a pixel
     float x = (u * image.width) - 0.5;
     int xint = int(x);
-    float xfract = x - floor(x);
+    Ciphertext xfract;
+    encryptor.encrypt(encoder.encode(x - floor(x)), xfract);
+    // float xfract = x - floor(x);
  
     float y = (v * image.height) - 0.5;
     int yint = int(y);
-    float yfract = y - floor(y);
+    Ciphertext yfract;
+    encryptor.encrypt(encoder.encode(y - floor(y)), yfract);
+    // float yfract = y - floor(y);
  
     // 1st row
     auto p00 = GetPixelClamped(image, xint - 1, yint - 1);
@@ -175,49 +186,35 @@ void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float
         CubicHermite(col1, p01[i], p11[i], p21[i], p31[i], xfract, evaluator, encoder, encryptor);
         CubicHermite(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor);
         CubicHermite(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor);
-        CubicHermite(ret[i], col0, col1, col2, col3, yfract);
+        CubicHermite(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor);
     }
     return;
 }
 
-/*
-void ResizeImage (const SImageData &srcImage, SImageData &destImage, float scale, int degree)
+
+void ResizeImage (const SImageData &srcImage, SImageData &destImage, int dest_width, int dest_height, int inter,
+                    Evaluator &evaluator, 
+                    FractionalEncoder &encoder, 
+                    Encryptor &encryptor)
 {
-    destImage.m_width = long(float(srcImage.m_width)*scale);
-    destImage.m_height = long(float(srcImage.m_height)*scale);
-    destImage.m_pitch = destImage.m_width * 3;
-    if (destImage.m_pitch & 3)
+    destImage.width = dest_width;
+    destImage.height = dest_height;
+    destImage.pixels = new std::vector<Ciphertext>();
+    for (int y = 0; y < destImage.height; ++y)
     {
-        destImage.m_pitch &= ~3;
-        destImage.m_pitch += 4;
-    }
-    destImage.m_pixels.resize(destImage.m_pitch*destImage.m_height);
- 
-    uint8 *row = &destImage.m_pixels[0];
-    for (int y = 0; y < destImage.m_height; ++y)
-    {
-        uint8 *destPixel = row;
-        float v = float(y) / float(destImage.m_height - 1);
-        for (int x = 0; x < destImage.m_width; ++x)
+        float v = float(y) / float(destImage.height - 1);
+        for (int x = 0; x < destImage.width; ++x)
         {
-            float u = float(x) / float(destImage.m_width - 1);
-            std::array<uint8, 3> sample;
+            float u = float(x) / float(destImage.width - 1);
+            std::vector<Ciphertext> sample;
  
-            if (degree == 0)
-                sample = SampleNearest(srcImage, u, v);
-            else if (degree == 1)
-                sample = SampleLinear(srcImage, u, v);
-            else if (degree == 2)
-                sample = SampleBicubic(srcImage, u, v);
- 
-            destPixel[0] = sample[0];
-            destPixel[1] = sample[1];
-            destPixel[2] = sample[2];
-            destPixel += 3;
+            if (inter == BILINEAR)
+                SampleLinear(sample, srcImage, u, v, evaluator, encoder, encryptor);
+            else if (inter == BICUBIC)
+                SampleBicubic(sample, srcImage, u, v, evaluator, encoder, encryptor);
+            destImage.pixels.push_back(sample);
         }
-        row += destImage.m_pitch;
     }
 }
-*/
 
 #endif
