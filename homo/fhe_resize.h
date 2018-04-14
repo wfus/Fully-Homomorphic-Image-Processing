@@ -85,7 +85,7 @@ void show_image_rgb(int width, int height,
     waitKey(0);
 }
 
-inline void CubicHermite(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &C, Ciphertext &D, Ciphertext &t,
+inline void Cubic(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &C, Ciphertext &D, Ciphertext &t,
                             Evaluator &evaluator, 
                             FractionalEncoder &encoder, 
                             Encryptor &encryptor,
@@ -132,7 +132,7 @@ inline void CubicHermite(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphe
 }
 
 
-inline void Lerp(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &t,
+inline void Linear(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &t,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
                     Encryptor &encryptor,
@@ -156,10 +156,10 @@ inline std::vector<Ciphertext> GetPixelClamped (const SImageData& image, int x, 
 {
     CLAMP(x, 0, image.width - 1);
     CLAMP(y, 0, image.height - 1);    
-    return image.pixels[x * image.width + y];
+    return image.pixels[y * image.width + x];
 }
 
-void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float u, float v,
+inline void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float u, float v,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
                     Encryptor &encryptor,
@@ -190,20 +190,20 @@ void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float 
 
     for (int i = 0; i < 3; ++i)
     {
-        Lerp(col0, p00[i], p10[i], xfract, evaluator, encoder, encryptor, decryptor);
-        Lerp(col1, p01[i], p11[i], xfract, evaluator, encoder, encryptor, decryptor);
-        Lerp(ret[i], col0, col1, yfract, evaluator, encoder, encryptor, decryptor);
-        // decryptor.decrypt(col0, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        // decryptor.decrypt(col1, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        // decryptor.decrypt(ret[i], p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        Linear(col0, p00[i], p10[i], xfract, evaluator, encoder, encryptor, decryptor);
+        Linear(col1, p01[i], p11[i], xfract, evaluator, encoder, encryptor, decryptor);
+        Linear(ret[i], col0, col1, yfract, evaluator, encoder, encryptor, decryptor);
+        decryptor.decrypt(col0, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(col1, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(ret[i], p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
     }
     return; 
 }
 
-void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float u, float v,
+inline void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float u, float v,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
                     Encryptor &encryptor,
@@ -254,21 +254,21 @@ void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float
     // need to add encryption of xfract, yfract
     for (int i = 0; i < 3; ++i)
     {
-        CubicHermite(col0, p00[i], p10[i], p20[i], p30[i], xfract, evaluator, encoder, encryptor, decryptor);
-        CubicHermite(col1, p01[i], p11[i], p21[i], p31[i], xfract, evaluator, encoder, encryptor, decryptor);
-        CubicHermite(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor, decryptor);
-        CubicHermite(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor, decryptor);
-        CubicHermite(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor, decryptor);
-        // decryptor.decrypt(col0, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        //  decryptor.decrypt(col1, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        //  decryptor.decrypt(col2, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        // decryptor.decrypt(col3, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        // decryptor.decrypt(ret[i], p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        Cubic(col0, p00[i], p10[i], p20[i], p30[i], xfract, evaluator, encoder, encryptor, decryptor);
+        Cubic(col1, p01[i], p11[i], p21[i], p31[i], xfract, evaluator, encoder, encryptor, decryptor);
+        Cubic(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor, decryptor);
+        Cubic(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor, decryptor);
+        Cubic(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor, decryptor);
+        decryptor.decrypt(col0, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+         decryptor.decrypt(col1, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+         decryptor.decrypt(col2, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(col3, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(ret[i], p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
     }
     return;
 }
@@ -284,11 +284,11 @@ void ResizeImage (const SImageData &srcImage, SImageData &destImage, int dest_wi
     destImage.width = dest_width;
     destImage.height = dest_height;
     destImage.pixels = dest_cpixels;
-    for (int y = 0; y < destImage.height; ++y)
-    {
+    
+    for (int y = 0; y < destImage.height; ++y){
+        std::cout << "Row " << y << std::endl;
         float v = float(y) / float(destImage.height - 1);
-        for (int x = 0; x < destImage.width; ++x)
-        {
+        for (int x = 0; x < destImage.width; ++x) {
             float u = float(x) / float(destImage.width - 1);
             std::vector<Ciphertext> sample(3);
             if (inter == BILINEAR)
