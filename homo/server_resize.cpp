@@ -169,7 +169,7 @@ int main(int argc, const char** argv) {
         resize_im,
         resized_width,
         resized_height,
-        BILINEAR,
+        BICUBIC,
         evaluator,
         encoder,
         encryptor,
