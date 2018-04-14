@@ -203,7 +203,6 @@ int main(int argc, const char** argv) {
             uint8_t pixel = (uint8_t) encoder.decode(p);
             CLAMP(pixel, 0, 255)
             decrypted_image.push_back(pixel);
-            std::cout << pixel << std::endl;
         }
         instream.close();
 
