@@ -138,16 +138,18 @@ int main(int argc, const char** argv) {
     SImageData im;
     im.width = original_width;
     im.height = original_height;
-    std::vector<Ciphertext> red, green, blue;
+    std::vector<std::vector<Ciphertext>> cpixels;
     for (int i = 0; i < original_width * original_height; i++) {
-        Ciphertext c; c.load(infile);
-        red.push_back(c);
+        std::vector<Ciphertext> pixel;
+        Ciphertext c; 
         c.load(infile);
-        green.push_back(c);
+        pixel.push_back(c);
         c.load(infile);
-        blue.push_back(c);
+        pixel.push_back(c);
+        c.load(infile);
+        pixel.push_back(c);
+        cpixels.push_back(pixel);
     }
-    std::vector<std::vector<Ciphertext>> cpixels = {red, green, blue}; 
     im.pixels = cpixels;
     std::cout << "Read in Ciphertexts..." << std::endl;
 
@@ -163,7 +165,12 @@ int main(int argc, const char** argv) {
         encryptor
     );
 
-
+    for (int i = 0; i < resize_im.pixels.size(); i++) {
+        for (int j = 0; j < 3; j++) {
+            Ciphertext c = resize_im.pixels[i][j];
+            c.save(outfile);
+        }
+    }
 
     infile.close();
     outfile.close();
