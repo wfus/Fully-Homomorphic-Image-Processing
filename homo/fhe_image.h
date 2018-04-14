@@ -25,7 +25,7 @@ const int N_FRACTIONAL_COEFFS = 10;
 const int N_NUMBER_COEFFS = 15;
 
 const int PLAIN_MODULUS = 1 << 14;
-const int COEFF_MODULUS = 2048;
+const int COEFF_MODULUS = 8192;
 
 
 

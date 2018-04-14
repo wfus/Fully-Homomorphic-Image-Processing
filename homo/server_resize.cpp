@@ -153,6 +153,16 @@ int main(int argc, const char** argv) {
     im.pixels = cpixels;
     std::cout << "Read in Ciphertexts..." << std::endl;
 
+    // Ciphertext c;
+    // Plaintext p;
+    //  for (int i = 0; i < im.pixels.size(); i++) {
+    //     for (int j = 0; j < 3; j++) {
+    //         c = im.pixels[i][j];
+    //         decryptor.decrypt(c, p);
+    //         std::cout << encoder.decode(p) << std::endl;
+    //     }
+    // }
+
     SImageData resize_im;
     ResizeImage(
         im,
@@ -162,8 +172,18 @@ int main(int argc, const char** argv) {
         BILINEAR,
         evaluator,
         encoder,
-        encryptor
+        encryptor,
+        decryptor
     );
+    // Ciphertext c;
+    // Plaintext p;
+    //  for (int i = 0; i < resize_im.pixels.size(); i++) {
+    //     for (int j = 0; j < 3; j++) {
+    //         c = resize_im.pixels[i][j];
+    //         decryptor.decrypt(c, p);
+    //         std::cout << encoder.decode(p) << std::endl;
+    //     }
+    // }
 
     for (int i = 0; i < resize_im.pixels.size(); i++) {
         for (int j = 0; j < 3; j++) {
