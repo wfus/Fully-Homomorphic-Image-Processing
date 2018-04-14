@@ -90,28 +90,27 @@ inline void CubicHermite(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphe
                             FractionalEncoder &encoder, 
                             Encryptor &encryptor) {
     Ciphertext a, b, c;
-    Ciphertext boaz1(A); evaluator.multiply_plain(boaz1, encoder.encode(0.5)); 
-    Ciphertext boaz2(B); evaluator.multiply_plain(boaz2, encoder.encode(1.5)); 
-    evaluator.add(boaz2, boaz1);
-    Ciphertext boaz3(C); evaluator.multiply_plain(boaz3, encoder.encode(1.5)); 
+    Ciphertext boaz1(A); 
+    Ciphertext boaz2(B); evaluator.multiply_plain(boaz2, encoder.encode(3)); 
+    evaluator.sub(boaz2, boaz1);
+    Ciphertext boaz3(C); evaluator.multiply_plain(boaz3, encoder.encode(3)); 
     evaluator.sub(boaz2, boaz3); 
-    Ciphertext boaz4(D); evaluator.multiply_plain(boaz4, encoder.encode(0.5));
+    Ciphertext boaz4(D);
     evaluator.add(boaz2, boaz4);
     a = boaz2;
 
-    Ciphertext boaz5(A);
-    Ciphertext boaz6(B); evaluator.multiply_plain(boaz6, encoder.encode(2.5));
+    Ciphertext boaz5(A); evaluator.multiply_plain(boaz5, encoder.encode(2));
+    Ciphertext boaz6(B); evaluator.multiply_plain(boaz6, encoder.encode(5));
     evaluator.sub(boaz5, boaz6); 
-    Ciphertext boaz7(C); evaluator.multiply_plain(boaz7, encoder.encode(2.0)); 
+    Ciphertext boaz7(C); evaluator.multiply_plain(boaz7, encoder.encode(4)); 
     evaluator.add(boaz5, boaz7);
-    Ciphertext boaz8(D); evaluator.multiply_plain(boaz8, encoder.encode(0.5)); 
+    Ciphertext boaz8(D);
     evaluator.sub(boaz5, boaz8); 
     b = boaz5;
 
     Ciphertext boaz9(A); 
     Ciphertext boaz10(C);
     evaluator.sub(boaz10, boaz9);
-    evaluator.multiply_plain(boaz10, encoder.encode(0.5)); 
     c = boaz10;
 
     Ciphertext t2(t); evaluator.multiply(t2, t);
@@ -123,6 +122,7 @@ inline void CubicHermite(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphe
     evaluator.add(a, b);
     evaluator.add(a, c);
     evaluator.add(a, B);
+    evaluator.multiply_plain(a, encoder.encode(0.5));
     result = a;
     return;
 }
