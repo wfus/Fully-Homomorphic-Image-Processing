@@ -88,8 +88,9 @@ void show_image_rgb(int width, int height,
 inline void CubicHermite(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &C, Ciphertext &D, Ciphertext &t,
                             Evaluator &evaluator, 
                             FractionalEncoder &encoder, 
-                            Encryptor &encryptor) {
-    Ciphertext a, b, c;
+                            Encryptor &encryptor,
+                            Decryptor &decryptor) {
+    Ciphertext a, b, c, d;
     Ciphertext boaz1(A); 
     Ciphertext boaz2(B); evaluator.multiply_plain(boaz2, encoder.encode(3)); 
     evaluator.sub(boaz2, boaz1);
@@ -113,16 +114,19 @@ inline void CubicHermite(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphe
     evaluator.sub(boaz10, boaz9);
     c = boaz10;
 
-    Ciphertext t2(t); evaluator.multiply(t2, t);
-    Ciphertext t3(t); evaluator.multiply(t3, t2);
+    d = B;
 
-    evaluator.multiply(a, t3); 
+    Ciphertext t2(t); evaluator.multiply(t2, t);
+    Ciphertext t3(t2); evaluator.multiply(t3, t);
+
+    evaluator.multiply(a, t3);
     evaluator.multiply(b, t2);
-    evaluator.multiply(c, t);
+    evaluator.multiply(c, t);   
+        
     evaluator.add(a, b);
     evaluator.add(a, c);
-    evaluator.add(a, B);
     evaluator.multiply_plain(a, encoder.encode(0.5));
+    evaluator.add(a, d);
     result = a;
     return;
 }
@@ -189,14 +193,13 @@ void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float 
         Lerp(col0, p00[i], p10[i], xfract, evaluator, encoder, encryptor, decryptor);
         Lerp(col1, p01[i], p11[i], xfract, evaluator, encoder, encryptor, decryptor);
         Lerp(ret[i], col0, col1, yfract, evaluator, encoder, encryptor, decryptor);
-        decryptor.decrypt(col0, p);
-        std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        decryptor.decrypt(col1, p);
-        std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        decryptor.decrypt(ret[i], p);
-        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        // decryptor.decrypt(col0, p);
+        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        // decryptor.decrypt(col1, p);
+        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        // decryptor.decrypt(ret[i], p);
+        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
     }
-    
     return; 
 }
 
@@ -251,21 +254,21 @@ void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float
     // need to add encryption of xfract, yfract
     for (int i = 0; i < 3; ++i)
     {
-        CubicHermite(col0, p00[i], p10[i], p20[i], p30[i], xfract, evaluator, encoder, encryptor);
-        CubicHermite(col1, p01[i], p11[i], p21[i], p31[i], xfract, evaluator, encoder, encryptor);
-        CubicHermite(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor);
-        CubicHermite(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor);
-        CubicHermite(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor);
-        decryptor.decrypt(col0, p);
-        std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        decryptor.decrypt(col1, p);
-        std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        decryptor.decrypt(col2, p);
-        std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        decryptor.decrypt(col3, p);
-        std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        decryptor.decrypt(ret[i], p);
-        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        CubicHermite(col0, p00[i], p10[i], p20[i], p30[i], xfract, evaluator, encoder, encryptor, decryptor);
+        CubicHermite(col1, p01[i], p11[i], p21[i], p31[i], xfract, evaluator, encoder, encryptor, decryptor);
+        CubicHermite(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor, decryptor);
+        CubicHermite(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor, decryptor);
+        CubicHermite(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor, decryptor);
+        // decryptor.decrypt(col0, p);
+        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        //  decryptor.decrypt(col1, p);
+        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        //  decryptor.decrypt(col2, p);
+        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        // decryptor.decrypt(col3, p);
+        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        // decryptor.decrypt(ret[i], p);
+        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
     }
     return;
 }

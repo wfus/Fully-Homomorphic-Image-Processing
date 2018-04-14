@@ -163,13 +163,22 @@ int main(int argc, const char** argv) {
     //     }
     // }
 
+    // Ciphertext c;
+    // encryptor.encrypt(encoder.encode(21), c);
+    // Ciphertext d;
+    // encryptor.encrypt(encoder.encode(0.125), d);
+    // evaluator.multiply(c, d);
+    // Plaintext p;
+    // decryptor.decrypt(c, p);
+    // std::cout << "TEST: " << encoder.decode(p) << std::endl;
+
     SImageData resize_im;
     ResizeImage(
         im,
         resize_im,
         resized_width,
         resized_height,
-        BICUBIC,
+        BILINEAR,
         evaluator,
         encoder,
         encryptor,
