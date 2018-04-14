@@ -200,7 +200,10 @@ int main(int argc, const char** argv) {
             c.load(instream);
             decryptor.decrypt(c, p);
             std::cout << i << '\t' << encoder.decode(p) << std::endl;
-            decrypted_image.push_back((uint8_t) encoder.decode(p));
+            uint8_t pixel = (uint8_t) encoder.decode(p);
+            CLAMP(pixel, 0, 255)
+            decrypted_image.push_back(pixel);
+            std::cout << pixel << std::endl;
         }
         instream.close();
 
