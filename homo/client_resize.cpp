@@ -191,6 +191,7 @@ int main(int argc, const char** argv) {
         // Read in the image as RGB interleaved...
         // Assuming that there are three channels
         std::ifstream instream;
+        std::cout << "Loading Ciphertexts now..." << std::endl; 
         instream.open(ctext_infile.c_str());
         std::vector<uint8_t> decrypted_image;
         Plaintext p;
@@ -198,6 +199,7 @@ int main(int argc, const char** argv) {
         for (int i = 0; i < resized_width * resized_height * 3; i++) {
             c.load(instream);
             decryptor.decrypt(c, p);
+            std::cout << i << '\t' << encoder.decode(p) << std::endl;
             decrypted_image.push_back((uint8_t) encoder.decode(p));
         }
         instream.close();
