@@ -90,33 +90,40 @@ inline void CubicHermite(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphe
                             FractionalEncoder &encoder, 
                             Encryptor &encryptor) {
     Ciphertext a, b, c;
-    Ciphertext boaz1(A); evaluator.multiply_plain(boaz1, encoder.encode(2.0)); 
-    Ciphertext boaz2(boaz1); evaluator.negate(boaz2); 
-    Ciphertext boaz3(B); evaluator.multiply_plain(boaz3, encoder.encode(3.0)); 
-    Ciphertext boaz4(boaz3); evaluator.multiply_plain(boaz4, encoder.encode(2.0)); 
-    Ciphertext boaz5(boaz2); evaluator.add(boaz5, boaz4); 
-    Ciphertext boaz6(C); evaluator.multiply_plain(boaz6, encoder.encode(3.0)); 
-    Ciphertext boaz7(boaz6); evaluator.multiply_plain(boaz7, encoder.encode(2.0)); 
-    Ciphertext boaz8(boaz5); evaluator.sub(boaz8, boaz7); 
-    Ciphertext boaz9(D); evaluator.multiply_plain(boaz9, encoder.encode(2.0)); 
-    Ciphertext boaz10(boaz8); evaluator.add(boaz10, boaz9); a = boaz10;
-    Ciphertext boaz11(B); evaluator.multiply_plain(boaz11, encoder.encode(5.0));
-    Ciphertext boaz12(boaz11); evaluator.multiply_plain(boaz12, encoder.encode(2.0)); 
-    Ciphertext boaz13(A); evaluator.sub(boaz13, boaz12); 
-    Ciphertext boaz14(C); evaluator.multiply_plain(boaz14, encoder.encode(2.0)); 
-    Ciphertext boaz15(boaz13); evaluator.add(boaz15, boaz14); 
-    Ciphertext boaz16(D); evaluator.multiply_plain(boaz16, encoder.encode(2.0)); 
-    Ciphertext boaz17(boaz15); evaluator.sub(boaz17, boaz16); b = boaz17;
-    Ciphertext boaz18(A); evaluator.multiply_plain(boaz18, encoder.encode(2.0)); 
-    Ciphertext boaz19(boaz18); evaluator.negate(boaz19); 
-    Ciphertext boaz20(C); evaluator.multiply_plain(boaz20, encoder.encode(2.0)); 
-    Ciphertext boaz21(boaz19); evaluator.add(boaz21, boaz20); c = boaz21;
-    Ciphertext boaz22(a); evaluator.multiply(boaz22, t); 
-    Ciphertext boaz23(boaz22); evaluator.multiply(boaz23, t); 
-    Ciphertext boaz24(boaz23); evaluator.multiply(boaz24, t); 
-    Ciphertext boaz25(b); evaluator.multiply(boaz25, t); 
-    Ciphertext boaz26(boaz25); evaluator.multiply(boaz26, t); 
-    Ciphertext boaz27(boaz24); evaluator.add(boaz27, boaz26); Ciphertext boaz28(c); evaluator.multiply(boaz28, t); Ciphertext boaz29(boaz27); evaluator.add(boaz29, boaz28); Ciphertext boaz30(boaz29); evaluator.add(boaz30, B); result = boaz30;
+    Ciphertext boaz1(A); evaluator.multiply_plain(boaz1, encoder.encode(0.5)); 
+    Ciphertext boaz2(B); evaluator.multiply_plain(boaz2, encoder.encode(1.5)); 
+    evaluator.add(boaz2, boaz1);
+    Ciphertext boaz3(C); evaluator.multiply_plain(boaz3, encoder.encode(1.5)); 
+    evaluator.sub(boaz2, boaz3); 
+    Ciphertext boaz4(D); evaluator.multiply_plain(boaz4, encoder.encode(0.5));
+    evaluator.add(boaz2, boaz4);
+    a = boaz2;
+
+    Ciphertext boaz5(A);
+    Ciphertext boaz6(B); evaluator.multiply_plain(boaz6, encoder.encode(2.5));
+    evaluator.sub(boaz5, boaz6); 
+    Ciphertext boaz7(C); evaluator.multiply_plain(boaz7, encoder.encode(2.0)); 
+    evaluator.add(boaz5, boaz7);
+    Ciphertext boaz8(D); evaluator.multiply_plain(boaz8, encoder.encode(0.5)); 
+    evaluator.sub(boaz5, boaz8); 
+    b = boaz5;
+
+    Ciphertext boaz9(A); 
+    Ciphertext boaz10(C);
+    evaluator.sub(boaz10, boaz9);
+    evaluator.multiply_plain(boaz10, encoder.encode(0.5)); 
+    c = boaz10;
+
+    Ciphertext t2(t); evaluator.multiply(t2, t);
+    Ciphertext t3(t); evaluator.multiply(t3, t2);
+
+    evaluator.multiply(a, t3); 
+    evaluator.multiply(b, t2);
+    evaluator.multiply(c, t);
+    evaluator.add(a, b);
+    evaluator.add(a, c);
+    evaluator.add(a, B);
+    result = a;
     return;
 }
 
@@ -124,11 +131,13 @@ inline void CubicHermite(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphe
 inline void Lerp(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &t,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor) {
+                    Encryptor &encryptor,
+                    Decryptor &decryptor) {
     Ciphertext boaz1(t); evaluator.negate(boaz1); evaluator.add_plain(boaz1, encoder.encode(1.0)); 
-    Ciphertext boaz2(A); evaluator.multiply(boaz2, boaz1); 
-    Ciphertext boaz3(B); evaluator.multiply(boaz3, t); 
-    Ciphertext boaz4(boaz3); evaluator.add(boaz4, boaz2); result = boaz4;
+    evaluator.multiply(boaz1, A); 
+    Ciphertext boaz2(B); evaluator.multiply(boaz2, t); 
+    evaluator.add(boaz1, boaz2); 
+    result = boaz1;
     return;
 }
 
@@ -149,7 +158,8 @@ inline std::vector<Ciphertext> GetPixelClamped (const SImageData& image, int x, 
 void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float u, float v,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor)
+                    Encryptor &encryptor,
+                    Decryptor &decryptor)
 {
     // calculate coordinates -> also need to offset by half a pixel to keep image from shifting down and left half a pixel
     float x = (u * image.width) - 0.5;
@@ -172,11 +182,19 @@ void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float 
  
     // interpolate bi-linearly!
     Ciphertext col0, col1;
+    Plaintext p;
+
     for (int i = 0; i < 3; ++i)
     {
-        Lerp(col0, p00[i], p10[i], xfract, evaluator, encoder, encryptor);
-        Lerp(col1, p01[i], p11[i], xfract, evaluator, encoder, encryptor);
-        Lerp(ret[i], col0, col1, yfract, evaluator, encoder, encryptor);
+        Lerp(col0, p00[i], p10[i], xfract, evaluator, encoder, encryptor, decryptor);
+        Lerp(col1, p01[i], p11[i], xfract, evaluator, encoder, encryptor, decryptor);
+        Lerp(ret[i], col0, col1, yfract, evaluator, encoder, encryptor, decryptor);
+        decryptor.decrypt(col0, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(col1, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(ret[i], p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
     }
     
     return; 
@@ -185,7 +203,8 @@ void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float 
 void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float u, float v,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor)
+                    Encryptor &encryptor,
+                    Decryptor &decryptor)
 {
     // calculate coordinates -> also need to offset by half a pixel to keep image from shifting down and left half a pixel
     float x = (u * image.width) - 0.5;
@@ -228,6 +247,7 @@ void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float
     // Clamp the values since the curve can put the value below 0 or above 255
     
     Ciphertext col0, col1, col2, col3;
+    Plaintext p;
     // need to add encryption of xfract, yfract
     for (int i = 0; i < 3; ++i)
     {
@@ -236,6 +256,16 @@ void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float
         CubicHermite(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor);
         CubicHermite(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor);
         CubicHermite(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor);
+        decryptor.decrypt(col0, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(col1, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(col2, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(col3, p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        decryptor.decrypt(ret[i], p);
+        std::cout << i << '\t' << encoder.decode(p) << std::endl;
     }
     return;
 }
@@ -259,9 +289,9 @@ void ResizeImage (const SImageData &srcImage, SImageData &destImage, int dest_wi
             float u = float(x) / float(destImage.width - 1);
             std::vector<Ciphertext> sample(3);
             if (inter == BILINEAR)
-                SampleLinear(sample, srcImage, u, v, evaluator, encoder, encryptor);
+                SampleLinear(sample, srcImage, u, v, evaluator, encoder, encryptor, decryptor);
             else if (inter == BICUBIC)
-                SampleBicubic(sample, srcImage, u, v, evaluator, encoder, encryptor);
+                SampleBicubic(sample, srcImage, u, v, evaluator, encoder, encryptor, decryptor);
             destImage.pixels.push_back(sample);
         }
     }
