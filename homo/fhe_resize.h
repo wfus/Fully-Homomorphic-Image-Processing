@@ -60,7 +60,8 @@ void show_image_rgb(int width, int height, std::vector<uint8_t> &interleaved) {
     waitKey(0);
 }
 
-
+// THIS ONLY WORKS FOR UNIX
+/*
 void save_image_rgb(int width, int height, std::vector<uint8_t> &interleaved) {
     std::vector<uint8_t> bgr_interleaved;
     for (int i = 0; i < interleaved.size(); i += 3) {
@@ -77,6 +78,7 @@ void save_image_rgb(int width, int height, std::vector<uint8_t> &interleaved) {
 
     imwrite("image/output.png", image, compression_params);
 }
+*/
 
 
 void show_image_rgb(int width, int height, 
