@@ -126,6 +126,7 @@ void encrypted_dct(std::vector<Ciphertext> &data,
                    Evaluator &evaluator, 
                    FractionalEncoder &encoder, 
                    Encryptor &encryptor) {
+    auto start = std::chrono::steady_clock::now();
     Ciphertext z1, z2, z3, z4, z5; 
     Ciphertext tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp10, tmp11, tmp12, tmp13;
     Ciphertext tmp14;
@@ -210,6 +211,8 @@ void encrypted_dct(std::vector<Ciphertext> &data,
         Ciphertext boaz94(tmp7); evaluator.add(boaz94, z1); Ciphertext boaz95(boaz94); evaluator.add(boaz95, z4); Ciphertext boaz96(boaz95); evaluator.multiply_plain(boaz96, encoder.encode(0.125)); data[curr_index+8]= boaz96;
         curr_index++;
     }
+    auto diff = std::chrono::steady_clock::now() - start;
+    std::cout << chrono::duration<double, milli>(diff).count() << ',';
     return;
 }
 
@@ -222,9 +225,12 @@ inline void quantize_fhe(std::vector<Ciphertext> &data,
                             Evaluator &evaluator, 
                             FractionalEncoder &encoder, 
                             Encryptor &encryptor) {
+    auto start = std::chrono::steady_clock::now();
     for (int i = 0; i < 64; i++) {
         evaluator.multiply_plain(data[i], encoder.encode(1/quant[i]));
     }
+    auto diff = std::chrono::steady_clock::now() - start;
+    std::cout << chrono::duration<double, milli>(diff).count() << ',';
 }
 
 /* Recieves three ciphertexts, corresponding to R, G, B. Does 
@@ -236,12 +242,15 @@ void rgb_to_ycc_fhe(Ciphertext &r,
                            Evaluator &evaluator, 
                            FractionalEncoder &encoder, 
                            Encryptor &encryptor) {
+    auto start = std::chrono::steady_clock::now();
     Ciphertext boaz1(r); evaluator.multiply_plain(boaz1, encoder.encode(0.299)); Ciphertext boaz2(g); evaluator.multiply_plain(boaz2, encoder.encode(0.587)); Ciphertext boaz3(boaz1); evaluator.add(boaz3, boaz2); Ciphertext boaz4(b); evaluator.multiply_plain(boaz4, encoder.encode(0.114)); Ciphertext boaz5(boaz3); evaluator.add(boaz5, boaz4); Ciphertext boaz6(boaz5); evaluator.sub_plain(boaz6, encoder.encode(128.0)); Ciphertext y(boaz6);
     Ciphertext boaz7(r); evaluator.multiply_plain(boaz7, encoder.encode(-0.168736)); Ciphertext boaz8(g); evaluator.multiply_plain(boaz8, encoder.encode(0.331264)); Ciphertext boaz9(boaz7); evaluator.sub(boaz9, boaz8); Ciphertext boaz10(b); evaluator.multiply_plain(boaz10, encoder.encode(0.5)); Ciphertext boaz11(boaz9); evaluator.add(boaz11, boaz10); Ciphertext u (boaz11);
     Ciphertext boaz12(r); evaluator.multiply_plain(boaz12, encoder.encode(0.5)); Ciphertext boaz13(g); evaluator.multiply_plain(boaz13, encoder.encode(0.418688)); Ciphertext boaz14(boaz12); evaluator.sub(boaz14, boaz13); Ciphertext boaz15(b); evaluator.multiply_plain(boaz15, encoder.encode(0.081312)); Ciphertext boaz16(boaz14); evaluator.sub(boaz16, boaz15); Ciphertext v (boaz16);
     r = y;
     g = u;
     b = v;
+    auto diff = std::chrono::steady_clock::now() - start;
+    std::cout << chrono::duration<double, milli>(diff).count() << ',';
 }
 /*
 template<class T> static void RGB_to_YCC(image *img, const T *src, int width, int y)
