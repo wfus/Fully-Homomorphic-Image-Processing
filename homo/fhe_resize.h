@@ -98,24 +98,24 @@ void show_image_rgb(int width, int height, std::vector<uint8_t> &interleaved) {
 }
 
 // THIS ONLY WORKS FOR UNIX
-/*
-void save_image_rgb(int width, int height, std::vector<uint8_t> &interleaved) {
-    std::vector<uint8_t> bgr_interleaved;
-    for (int i = 0; i < interleaved.size(); i += 3) {
-        bgr_interleaved.push_back(interleaved[i+2]);
-        bgr_interleaved.push_back(interleaved[i+1]);
-        bgr_interleaved.push_back(interleaved[i+0]);
+#ifdef linux
+    void save_image_rgb(int width, int height, std::vector<uint8_t> &interleaved, std::string fname) {
+        std::vector<uint8_t> bgr_interleaved;
+        for (int i = 0; i < interleaved.size(); i += 3) {
+            bgr_interleaved.push_back(interleaved[i+2]);
+            bgr_interleaved.push_back(interleaved[i+1]);
+            bgr_interleaved.push_back(interleaved[i+0]);
+        }
+        uint8_t* bgr_array = &bgr_interleaved[0];
+        Mat image(height, width, CV_8UC3, bgr_array);
+
+        vector<int> compression_params;
+        compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+        compression_params.push_back(9);
+
+        imwrite(fname.c_str(), image, compression_params);
     }
-    uint8_t* bgr_array = &bgr_interleaved[0];
-    Mat image(height, width, CV_8UC3, bgr_array);
-
-    vector<int> compression_params;
-    compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-    compression_params.push_back(9);
-
-    imwrite("image/output.png", image, compression_params);
-}
-*/
+#endif
 
 
 void show_image_rgb(int width, int height, 

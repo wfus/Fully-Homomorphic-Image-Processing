@@ -223,9 +223,13 @@ int main(int argc, const char** argv) {
 
         // Display our decrypted image!
         // show_image_rgb(resized_width, resized_height, decrypted_image);
+
+        // Calculate RMS Error
         compare_resize_opencv(test_filename.c_str(), resized_width, resized_height, decrypted_image);
-        // This only works for UNIX
-        // save_image_rgb(resized_width, resized_height, decrypted_image);
+
+        #ifdef linux
+            save_image_rgb(resized_width, resized_height, decrypted_image, ctext_outfile);
+        #endif
     }
     return 0;
 }
