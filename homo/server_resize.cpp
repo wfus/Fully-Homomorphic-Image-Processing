@@ -26,6 +26,7 @@ int main(int argc, const char** argv) {
     
     std::string ctext_infile("./image/nothingpersonnel.txt");
     std::string ctext_outfile("./image/zoop.txt");
+    bool bicubic = false;
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
@@ -40,6 +41,7 @@ int main(int argc, const char** argv) {
 
         options.add_options()
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
+            ("bicubic", "Use bicubic interpolation instead of linear", cxxopts::value<bool>(bicubic))
             ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
             ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
@@ -171,7 +173,7 @@ int main(int argc, const char** argv) {
     // Plaintext p;
     // decryptor.decrypt(c, p);
     // std::cout << "TEST: " << encoder.decode(p) << std::endl;
-
+    int INTER_TYPE = bicubic ? BICUBIC : BILINEAR;
     SImageData resize_im;
     ResizeImage(
         ctext_infile,
@@ -180,7 +182,7 @@ int main(int argc, const char** argv) {
         resize_im,
         resized_width,
         resized_height,
-        BILINEAR,
+        INTER_TYPE,
         evaluator,
         encoder,
         encryptor,
