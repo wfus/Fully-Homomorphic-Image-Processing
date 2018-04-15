@@ -15,7 +15,7 @@ std::vector<double> read_image(std::string fname);
 int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
-    std::string test_filename("./image/test.jpg");
+    std::string test_filename("./image/kung.jpg");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
@@ -126,8 +126,8 @@ int main(int argc, const char** argv) {
         public_key.save(pkfile);
         secret_key.save(skfile);
         diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "KeyGen: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+        // std::cout << "KeyGen: ";
+        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
 
@@ -144,18 +144,21 @@ int main(int argc, const char** argv) {
         // Write to ciphertext as RGBRGBRGBRGB row by row. 
         std::ofstream myfile;
         myfile.open(ctext_outfile.c_str());
-        std::cout << width << " " << height << std::endl;
-        start = std::chrono::steady_clock::now(); 
+        // std::cout << width << " " << height << std::endl;
+       
         Ciphertext c;
         for (int i = 0; i < width * height * channels; i++) {
+            start = std::chrono::steady_clock::now(); 
             encryptor.encrypt(encoder.encode(image_data[i]), c);
+            diff = std::chrono::steady_clock::now() - start; 
+            std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
             c.save(myfile); 
-            if (i % 100 == 0) std::cout << "Encoded "<< i << " intensities..." << std::endl;
+            
         }
-        diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "EncryptWrite: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << std::endl;
-        std::cout << "EncryptWritePerPixel: " << chrono::duration<double, milli>(diff).count()/(width*height) << std::endl;
+      
+        // std::cout << "EncryptWrite: ";
+        // std::cout << chrono::duration<double, milli>(diff).count() << std::endl;
+        // std::cout << "EncryptWritePerPixel: " << chrono::duration<double, milli>(diff).count()/(width*height) << std::endl;
         myfile.close();
     }
 
@@ -184,8 +187,8 @@ int main(int argc, const char** argv) {
         public_key.load(pkfile);
         secret_key.load(skfile);
         diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "Key Load Time: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+        // std::cout << "Key Load Time: ";
+        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
         Encryptor encryptor(context, public_key);
@@ -197,15 +200,18 @@ int main(int argc, const char** argv) {
         // Read in the image as RGB interleaved...
         // Assuming that there are three channels
         std::ifstream instream;
-        std::cout << "Loading Ciphertexts now..." << std::endl; 
+        // std::cout << "Loading Ciphertexts now..." << std::endl; 
         instream.open(ctext_infile.c_str());
         std::vector<uint8_t> decrypted_image;
         Plaintext p;
         Ciphertext c;
         for (int i = 0; i < resized_width * resized_height * 3; i++) {
             c.load(instream);
+            start = std::chrono::steady_clock::now(); 
             decryptor.decrypt(c, p);
-            std::cout << i << '\t' << encoder.decode(p) << std::endl;
+            diff = std::chrono::steady_clock::now() - start; 
+            std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
+            // std::cout << i << '\t' << encoder.decode(p) << std::endl;
             uint8_t pixel = (uint8_t) encoder.decode(p);
             CLAMP(pixel, 0, 255)
             decrypted_image.push_back(pixel);

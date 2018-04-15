@@ -107,8 +107,8 @@ void show_image_rgb(int width, int height,
 inline void Cubic(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &C, Ciphertext &D, Ciphertext &t,
                             Evaluator &evaluator, 
                             FractionalEncoder &encoder, 
-                            Encryptor &encryptor,
-                            Decryptor &decryptor) {
+                            Encryptor &encryptor) {
+    auto start = std::chrono::steady_clock::now();
     Ciphertext a, b, c, d;
     Ciphertext boaz1(A); 
     Ciphertext boaz2(B); evaluator.multiply_plain(boaz2, encoder.encode(3)); 
@@ -147,6 +147,8 @@ inline void Cubic(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &
     evaluator.multiply_plain(a, encoder.encode(0.5));
     evaluator.add(a, d);
     result = a;
+    auto diff = std::chrono::steady_clock::now() - start;
+    std::cout << chrono::duration<double, milli>(diff).count() << ',';
     return;
 }
 
@@ -154,13 +156,15 @@ inline void Cubic(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &
 inline void Linear(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &t,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor,
-                    Decryptor &decryptor) {
+                    Encryptor &encryptor) {
+    auto start = std::chrono::steady_clock::now();
     Ciphertext boaz1(t); evaluator.negate(boaz1); evaluator.add_plain(boaz1, encoder.encode(1.0)); 
     evaluator.multiply(boaz1, A); 
     Ciphertext boaz2(B); evaluator.multiply(boaz2, t); 
     evaluator.add(boaz1, boaz2); 
     result = boaz1;
+    auto diff = std::chrono::steady_clock::now() - start;
+    std::cout << chrono::duration<double, milli>(diff).count() << ',';
     return;
 }
 
@@ -176,14 +180,14 @@ inline std::vector<Ciphertext> GetPixelClamped (const SImageData& image, int x, 
 {
     CLAMP(x, 0, image.width - 1);
     CLAMP(y, 0, image.height - 1);    
+    // std::cout << "QUERY: " << y * image.width + x - image.start << std::endl;
     return image.pixels[y * image.width + x - image.start];
 }
 
 inline void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float x, float y,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor,
-                    Decryptor &decryptor)
+                    Encryptor &encryptor)
 {
     // calculate coordinates -> also need to offset by half a pixel to keep image from shifting down and left half a pixel
     int xint = int(x);
@@ -202,19 +206,12 @@ inline void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image,
  
     // interpolate bi-linearly!
     Ciphertext col0, col1;
-    Plaintext p;
-
+    
     for (int i = 0; i < 3; ++i)
     {
-        Linear(col0, p00[i], p10[i], xfract, evaluator, encoder, encryptor, decryptor);
-        Linear(col1, p01[i], p11[i], xfract, evaluator, encoder, encryptor, decryptor);
-        Linear(ret[i], col0, col1, yfract, evaluator, encoder, encryptor, decryptor);
-    //     decryptor.decrypt(col0, p);
-    //     std::cout << i << '\t' << encoder.decode(p) << std::endl;
-    //     decryptor.decrypt(col1, p);
-    //     std::cout << i << '\t' << encoder.decode(p) << std::endl;
-    //     decryptor.decrypt(ret[i], p);
-    //     std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        Linear(col0, p00[i], p10[i], xfract, evaluator, encoder, encryptor);
+        Linear(col1, p01[i], p11[i], xfract, evaluator, encoder, encryptor);
+        Linear(ret[i], col0, col1, yfract, evaluator, encoder, encryptor);
     }
     return; 
 }
@@ -222,8 +219,7 @@ inline void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image,
 inline void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float x, float y,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor,
-                    Decryptor &decryptor)
+                    Encryptor &encryptor)
 {
     // calculate coordinates -> also need to offset by half a pixel to keep image from shifting down and left half a pixel
     int xint = int(x);
@@ -262,25 +258,13 @@ inline void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image
     // Clamp the values since the curve can put the value below 0 or above 255
     
     Ciphertext col0, col1, col2, col3;
-    Plaintext p;
-    // need to add encryption of xfract, yfract
     for (int i = 0; i < 3; ++i)
     {
-        Cubic(col0, p00[i], p10[i], p20[i], p30[i], xfract, evaluator, encoder, encryptor, decryptor);
-        Cubic(col1, p01[i], p11[i], p21[i], p31[i], xfract, evaluator, encoder, encryptor, decryptor);
-        Cubic(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor, decryptor);
-        Cubic(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor, decryptor);
-        Cubic(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor, decryptor);
-        // decryptor.decrypt(col0, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        //  decryptor.decrypt(col1, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        //  decryptor.decrypt(col2, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        // decryptor.decrypt(col3, p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-        // decryptor.decrypt(ret[i], p);
-        // std::cout << i << '\t' << encoder.decode(p) << std::endl;
+        Cubic(col0, p00[i], p10[i], p20[i], p30[i], xfract, evaluator, encoder, encryptor);
+        Cubic(col1, p01[i], p11[i], p21[i], p31[i], xfract, evaluator, encoder, encryptor);
+        Cubic(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor);
+        Cubic(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor);
+        Cubic(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor);
     }
     return;
 }
@@ -290,8 +274,7 @@ void ResizeImage (String infile_str, int original_width, int original_height,
                     SImageData &destImage, int dest_width, int dest_height, int inter,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor,
-                    Decryptor &decryptor)
+                    Encryptor &encryptor)
 {
     std::ifstream infile;
     infile.open(infile_str.c_str());
@@ -309,6 +292,7 @@ void ResizeImage (String infile_str, int original_width, int original_height,
     } else if (inter == BICUBIC) {
         init_rows = 4;
     }
+    int read = 0;
     for (int i = 0; i < original_width * init_rows; i++) {
         std::vector<Ciphertext> pixel;
         Ciphertext c; 
@@ -319,6 +303,7 @@ void ResizeImage (String infile_str, int original_width, int original_height,
         c.load(infile);
         pixel.push_back(c);
         srcImage.pixels.push_back(pixel);
+        read ++;
     }
 
     std::vector<std::vector<Ciphertext>> dest_cpixels;
@@ -328,14 +313,17 @@ void ResizeImage (String infile_str, int original_width, int original_height,
     destImage.pixels = dest_cpixels;
     
     for (int y = 0; y < destImage.height; ++y){
-        std::cout << "Row " << y << std::endl;
+        std::cout << std::endl << "Row " << y << std::endl;
         float v = float(y) / float(destImage.height - 1) * float(srcImage.height) - 0.5;
-        int curr_start = srcImage.start;
+        std::cout << read << std::endl;
         int new_start = (int(v) - init_rows / 2 + 1) * srcImage.width; 
-        if (new_start > srcImage.start) {
+        std::cout << srcImage.start << '\t' << new_start << '\t' << srcImage.start + init_rows / 2 * srcImage.width << std::endl;
+        if (new_start > srcImage.start && 
+                srcImage.start / srcImage.width + init_rows / 2 < srcImage.height) {
+            std::cout << "Changing image vector" << std::endl;
             std::vector<std::vector<Ciphertext>> new_pixels;
             int present = 0;
-            for (int i = new_start - srcImage.start; i < init_rows * srcImage.width; i++) {
+            for (int i = new_start - srcImage.start; i < init_rows / 2 * srcImage.width; i++) {
                 new_pixels.push_back(srcImage.pixels[i]);
                 present++;
             }
@@ -349,6 +337,7 @@ void ResizeImage (String infile_str, int original_width, int original_height,
                 c.load(infile);
                 pixel.push_back(c);
                 new_pixels.push_back(pixel);
+                read++;
             }
             srcImage.start = new_start;
             srcImage.pixels = new_pixels;
@@ -360,9 +349,9 @@ void ResizeImage (String infile_str, int original_width, int original_height,
             float u = float(x) / float(destImage.width - 1) * float(srcImage.width) - 0.5;
             std::vector<Ciphertext> sample(3);
             if (inter == BILINEAR) {
-                SampleLinear(sample, srcImage, u, v, evaluator, encoder, encryptor, decryptor);
+                SampleLinear(sample, srcImage, u, v, evaluator, encoder, encryptor);
             } else if (inter == BICUBIC) {
-                SampleBicubic(sample, srcImage, u, v, evaluator, encoder, encryptor, decryptor);
+                SampleBicubic(sample, srcImage, u, v, evaluator, encoder, encryptor);
             }
             destImage.pixels.push_back(sample);
         }

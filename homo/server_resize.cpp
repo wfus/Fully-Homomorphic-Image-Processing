@@ -20,7 +20,7 @@ int main(int argc, const char** argv) {
     paramfile >> original_width;
     paramfile >> original_height;
     paramfile >> channels;
-    std::cout << original_width << " " << original_height << std::endl;
+    // std::cout << original_width << " " << original_height << std::endl;
     assert(channels == 3); assert(original_width != 0); assert(original_height != 0);
     paramfile.close();
     
@@ -102,8 +102,8 @@ int main(int argc, const char** argv) {
     public_key.load(pkfile);
     secret_key.load(skfile);
     diff = std::chrono::steady_clock::now() - start; 
-    std::cout << "Key Load Time: ";
-    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+    // std::cout << "Key Load Time: ";
+    // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
     pkfile.close(); skfile.close();    
 
 
@@ -118,59 +118,6 @@ int main(int argc, const char** argv) {
 
     std::ofstream outfile;
     outfile.open(ctext_outfile.c_str()); 
-    std::ifstream infile;
-    infile.open(ctext_infile.c_str());
-
-    // TODO: IMPLEMENT THE SYSTEM BELOW
-    /************************************************************************
-     * Bicubic and Bilinear Interpolation use only at most the four pixels
-     * in the surrounding area at most. Therefore, we only want to load as 
-     * many ciphertexts that are needed at once. Since we get the ciphertexts
-     * row by row interleaved by RGB, we will calculate each row of the 
-     * resized image and then remove the ciphertexts that will not be needed
-     * anymore.
-     ************************************************************************/
-
-    // BADBROKEN: Reads it in all at once, CHANGE THIS LATER
-    // THIS IS NOT HALAL AT ALL
-    // ABSOLUTELY NOT 
-    std::cout << "Loading Ciphertexts now..." << std::endl; 
-    SImageData im;
-    im.width = original_width;
-    im.height = original_height;
-    std::vector<std::vector<Ciphertext>> cpixels;
-    for (int i = 0; i < original_width * original_height; i++) {
-        std::vector<Ciphertext> pixel;
-        Ciphertext c; 
-        c.load(infile);
-        pixel.push_back(c);
-        c.load(infile);
-        pixel.push_back(c);
-        c.load(infile);
-        pixel.push_back(c);
-        cpixels.push_back(pixel);
-    }
-    im.pixels = cpixels;
-    std::cout << "Read in Ciphertexts..." << std::endl;
-
-    // Ciphertext c;
-    // Plaintext p;
-    //  for (int i = 0; i < im.pixels.size(); i++) {
-    //     for (int j = 0; j < 3; j++) {
-    //         c = im.pixels[i][j];
-    //         decryptor.decrypt(c, p);
-    //         std::cout << encoder.decode(p) << std::endl;
-    //     }
-    // }
-
-    // Ciphertext c;
-    // encryptor.encrypt(encoder.encode(21), c);
-    // Ciphertext d;
-    // encryptor.encrypt(encoder.encode(0.125), d);
-    // evaluator.multiply(c, d);
-    // Plaintext p;
-    // decryptor.decrypt(c, p);
-    // std::cout << "TEST: " << encoder.decode(p) << std::endl;
 
     SImageData resize_im;
     ResizeImage(
@@ -183,18 +130,9 @@ int main(int argc, const char** argv) {
         BILINEAR,
         evaluator,
         encoder,
-        encryptor,
-        decryptor
+        encryptor
     );
-    // Ciphertext c;
-    // Plaintext p;
-    //  for (int i = 0; i < resize_im.pixels.size(); i++) {
-    //     for (int j = 0; j < 3; j++) {
-    //         c = resize_im.pixels[i][j];
-    //         decryptor.decrypt(c, p);
-    //         std::cout << encoder.decode(p) << std::endl;
-    //     }
-    // }
+    std::cout << std::endl;
 
     for (int i = 0; i < resize_im.pixels.size(); i++) {
         for (int j = 0; j < 3; j++) {
@@ -203,7 +141,7 @@ int main(int argc, const char** argv) {
         }
     }
 
-    infile.close();
+    // infile.close();
     outfile.close();
     return 0;
 }
