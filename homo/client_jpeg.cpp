@@ -187,7 +187,7 @@ int main(int argc, const char** argv) {
         int width = 0, height = 0, actual_composition = 0;
         uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
         // The image will be interleaved r g b r g b ...
-        std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
+        // std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
 
         //jo_write_jpg("../image/boazbarak.jpg", image_data, width, height, 3, 100);
 
@@ -221,8 +221,8 @@ int main(int argc, const char** argv) {
         public_key.save(pkfile);
         secret_key.save(skfile);
         diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "KeyGen: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+        // std::cout << "KeyGen: ";
+        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
 
@@ -254,31 +254,40 @@ int main(int argc, const char** argv) {
 
         std::ofstream myfile;
         myfile.open("../image/nothingpersonnel.txt");
-        std::cout << width << " " << height << std::endl;
+        // std::cout << width << " " << height << std::endl;
         start = std::chrono::steady_clock::now(); 
         Ciphertext c;
         double conv;
         for (int i = 0; i < red_blocks.size(); i++) {
             for (int j = 0; j < red_blocks[i].size(); j++) {
                 conv = red_blocks[i][j];
+                start = std::chrono::steady_clock::now();
                 encryptor.encrypt(encoder.encode(conv), c);
+                diff = std::chrono::steady_clock::now() - start; 
+                std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
                 c.save(myfile);
             }
             for (int j = 0; j < green_blocks[i].size(); j++) {
                 conv = green_blocks[i][j];
+                start = std::chrono::steady_clock::now();
                 encryptor.encrypt(encoder.encode(conv), c);
+                diff = std::chrono::steady_clock::now() - start; 
+                std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
                 c.save(myfile);
             }
             for (int j = 0; j < blue_blocks[i].size(); j++) {
                 conv = blue_blocks[i][j];
+                start = std::chrono::steady_clock::now();
                 encryptor.encrypt(encoder.encode(conv), c);
+                diff = std::chrono::steady_clock::now() - start; 
+                std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
                 c.save(myfile);
             }
-            if (i % 10 == 0) std::cout << "Encoded "<< i << " blocks..." << std::endl;
+            // if (i % 10 == 0) std::cout << "Encoded "<< i << " blocks..." << std::endl;
         }
-        diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "Ciphertext write: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+        // diff = std::chrono::steady_clock::now() - start; 
+        // std::cout << "Ciphertext write: ";
+        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         myfile.close();
     }
     else
@@ -297,7 +306,7 @@ int main(int argc, const char** argv) {
         paramfile.open("../keys/params.txt");
         paramfile >> WIDTH;
         paramfile >> HEIGHT;
-        std::cout << WIDTH << " " << HEIGHT << std::endl;
+        // std::cout << WIDTH << " " << HEIGHT << std::endl;
         paramfile.close();
 
 
@@ -320,8 +329,8 @@ int main(int argc, const char** argv) {
         public_key.load(pkfile);
         secret_key.load(skfile);
         diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "Key Load Time: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+        // std::cout << "Key Load Time: ";
+        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
         Encryptor encryptor(context, public_key);
@@ -388,12 +397,15 @@ int main(int argc, const char** argv) {
         for (int i = 0; i < num_blocks; i++) {
             int block_zz[3][block_pix];
             for (int k = 0; k < 3; k++) {
-                std::cout << i << "\t" << k << std::endl;
+                // std::cout << i << "\t" << k << std::endl;
                 for (int j = 0; j < block_pix; j++) {
                     Ciphertext c;
                     c.load(myfile);
                     Plaintext p;
+                    start = std::chrono::steady_clock::now();
                     decryptor.decrypt(c, p);
+                    diff = std::chrono::steady_clock::now() - start; 
+                    std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
                     v = encoder.decode(p);
                     // std::cout << v << ", ";
                     block_zz[k][s_ZigZag[j]] = (int)(v < 0 ? ceilf(v - 0.5f) : floorf(v + 0.5f));
