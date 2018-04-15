@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.1)
 
 # Must use g++-7, this needs to be set before the project line
 set(CMAKE_C_COMPILER "gcc-7")
