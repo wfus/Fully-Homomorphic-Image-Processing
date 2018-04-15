@@ -217,7 +217,6 @@ inline std::vector<Ciphertext> GetPixelClamped (const SImageData& image, int x, 
 {
     CLAMP(x, 0, image.width - 1);
     CLAMP(y, 0, image.height - 1);    
-    // std::cout << "QUERY: " << y * image.width + x - image.start << std::endl;
     return image.pixels[y * image.width + x - image.start];
 }
 
@@ -350,13 +349,13 @@ void ResizeImage (String infile_str, int original_width, int original_height,
     destImage.pixels = dest_cpixels;
     
     for (int y = 0; y < destImage.height; ++y){
-        // std::cout << std::endl << "Row " << y << std::endl;
+        std::cout << std::endl << "Row " << y << std::endl;
         float v = float(y) / float(destImage.height - 1) * float(srcImage.height) - 0.5;
-        // std::cout << read << std::endl;
-        int new_start = (int(v) - init_rows / 2 + 1) * srcImage.width; 
-        // std::cout << srcImage.start << '\t' << new_start << '\t' << srcImage.start + init_rows / 2 * srcImage.width << std::endl;
-        if (new_start > srcImage.start && 
-                srcImage.start / srcImage.width + init_rows < srcImage.height) {
+        std::cout << read << std::endl;
+        int new_start = min(int(v) - init_rows / 2 + 1, srcImage.height - init_rows) * srcImage.width; 
+        std::cout << new_start << '\t' << srcImage.start  << '\t' << srcImage.start + init_rows * srcImage.width << std::endl;
+        if (new_start > srcImage.start) { 
+
             std::vector<std::vector<Ciphertext>> new_pixels;
             int present = 0;
             for (int i = new_start - srcImage.start; i < init_rows * srcImage.width; i++) {
