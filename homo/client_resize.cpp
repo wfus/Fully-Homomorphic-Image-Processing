@@ -15,7 +15,7 @@ std::vector<double> read_image(std::string fname);
 int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
-    std::string test_filename("./image/kung.jpg");
+    std::string test_filename("./image/test.jpg");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
@@ -25,6 +25,7 @@ int main(int argc, const char** argv) {
     int coeff_modulus = COEFF_MODULUS;
     int resized_width = 0;
     int resized_height = 0;
+    bool verbose = false;
 
     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
@@ -33,6 +34,7 @@ int main(int argc, const char** argv) {
         options.add_options()
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
+            ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
             ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
             ("c,cfile", "Filename for ciphertext result file to be checked for correctness", cxxopts::value<std::string>())
@@ -151,11 +153,11 @@ int main(int argc, const char** argv) {
             start = std::chrono::steady_clock::now(); 
             encryptor.encrypt(encoder.encode(image_data[i]), c);
             diff = std::chrono::steady_clock::now() - start; 
-            std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
+            std::cout << chrono::duration<double, milli>(diff).count() << ',';
             c.save(myfile); 
             
         }
-      
+        std::cout << std::endl;
         // std::cout << "EncryptWrite: ";
         // std::cout << chrono::duration<double, milli>(diff).count() << std::endl;
         // std::cout << "EncryptWritePerPixel: " << chrono::duration<double, milli>(diff).count()/(width*height) << std::endl;
@@ -210,13 +212,14 @@ int main(int argc, const char** argv) {
             start = std::chrono::steady_clock::now(); 
             decryptor.decrypt(c, p);
             diff = std::chrono::steady_clock::now() - start; 
-            std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
+            std::cout << chrono::duration<double, milli>(diff).count() << ',';
             // std::cout << i << '\t' << encoder.decode(p) << std::endl;
             uint8_t pixel = (uint8_t) encoder.decode(p);
             CLAMP(pixel, 0, 255)
             decrypted_image.push_back(pixel);
         }
         instream.close();
+        std::cout << std::endl;
 
         // Display our decrypted image!
         show_image_rgb(resized_width, resized_height, decrypted_image);
