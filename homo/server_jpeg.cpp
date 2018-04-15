@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
     paramfile >> WIDTH;
     paramfile >> HEIGHT;
     paramfile >> CHANNELS;
-    std::cout << WIDTH << " " << HEIGHT << " Channels: " << CHANNELS << std::endl;
+    // std::cout << WIDTH << " " << HEIGHT << " Channels: " << CHANNELS << std::endl;
     assert(CHANNELS != 0);
     assert(CHANNELS == 3);
     assert(WIDTH != 0);
@@ -61,8 +61,8 @@ int main(int argc, char** argv) {
     public_key.load(pkfile);
     secret_key.load(skfile);
     diff = std::chrono::steady_clock::now() - start; 
-    std::cout << "Key Load Time: ";
-    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+    // std::cout << "Key Load Time: ";
+    // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
     pkfile.close(); skfile.close();    
 
 
@@ -94,19 +94,22 @@ int main(int argc, char** argv) {
         for (int i = 0; i < BLOCK_SIZE*BLOCK_SIZE; i++) {c.load(myfile); blue.push_back(c); } 
     
         // CONVERT RGB INTO YCC in place
+        std::cout << "RGB YCC,";
         for (int i = 0; i < red.size(); i++) {
             rgb_to_ycc_fhe(red[i], green[i], blue[i], evaluator, encoder, encryptor);
         }
+        std::cout << std::endl;
+        std::cout << "DCT,";
         encrypted_dct(red, evaluator, encoder, encryptor);
         encrypted_dct(green, evaluator, encoder, encryptor);
         encrypted_dct(blue, evaluator, encoder, encryptor);
         save_three_blocks_interleaved_ycc(outfile, red, green, blue);
-
-        std::cout << "Finished " << curr_block << " block triples..." << std::endl;
+        std::cout << std::endl;
+        // std::cout << "Finished " << curr_block << " block triples..." << std::endl;
     }
-    std::cout << "DCT and File IO: ";
-    diff = std::chrono::steady_clock::now() - start; 
-    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+    // std::cout << "DCT and File IO: ";
+    // diff = std::chrono::steady_clock::now() - start; 
+    // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
     
     myfile.close();
     outfile.close();  

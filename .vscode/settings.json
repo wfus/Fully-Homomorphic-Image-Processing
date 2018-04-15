@@ -33,6 +33,8 @@
         "valarray": "cpp",
         "vector": "cpp",
         "*.ipp": "cpp",
-        "slist": "cpp"
+        "slist": "cpp",
+        "cctype": "cpp",
+        "cstdlib": "cpp"
     }
 }
