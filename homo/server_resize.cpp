@@ -174,11 +174,13 @@ int main(int argc, const char** argv) {
 
     SImageData resize_im;
     ResizeImage(
-        im,
+        ctext_infile,
+        original_width,
+        original_height,
         resize_im,
         resized_width,
         resized_height,
-        BICUBIC,
+        BILINEAR,
         evaluator,
         encoder,
         encryptor,
