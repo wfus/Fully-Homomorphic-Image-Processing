@@ -27,6 +27,7 @@ int main(int argc, const char** argv) {
     std::string ctext_infile("./image/nothingpersonnel.txt");
     std::string ctext_outfile("./image/zoop.txt");
     bool bicubic = false;
+    bool verbose = false;
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
@@ -35,6 +36,7 @@ int main(int argc, const char** argv) {
     int resized_width = 0;
     int resized_height = 0;
 
+
     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
         options.positional_help("[optional args]").show_positional_help();
@@ -42,6 +44,7 @@ int main(int argc, const char** argv) {
         options.add_options()
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
             ("bicubic", "Use bicubic interpolation instead of linear", cxxopts::value<bool>(bicubic))
+            ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
             ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
             ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())

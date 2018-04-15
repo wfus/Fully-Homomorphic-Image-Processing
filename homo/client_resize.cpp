@@ -25,6 +25,7 @@ int main(int argc, const char** argv) {
     int coeff_modulus = COEFF_MODULUS;
     int resized_width = 0;
     int resized_height = 0;
+    bool verbose = false;
 
     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
@@ -33,6 +34,7 @@ int main(int argc, const char** argv) {
         options.add_options()
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
+            ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
             ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
             ("c,cfile", "Filename for ciphertext result file to be checked for correctness", cxxopts::value<std::string>())
