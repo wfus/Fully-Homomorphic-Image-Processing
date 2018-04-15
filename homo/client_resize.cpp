@@ -15,7 +15,7 @@ std::vector<double> read_image(std::string fname);
 int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
-    std::string test_filename("./image/boazbarak.jpg");
+    std::string test_filename("./image/test.jpg");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
@@ -92,6 +92,11 @@ int main(int argc, const char** argv) {
         // The image will be interleaved r g b r g b ...
         std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
         int channels = requested_composition;
+        // std::vector<uint8_t> original_image;
+        // for (int i = 0; i < width * height * channels; i++) {
+        //     original_image.push_back(image_data[i]);
+        // }
+        // show_image_rgb(width, height, original_image);
 
         // Encryption Parameters
         EncryptionParameters params;
@@ -161,6 +166,7 @@ int main(int argc, const char** argv) {
     {
         // Encryption Parameters
         EncryptionParameters params;
+
         params.set_poly_modulus("1x^8192 + 1");
         params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
         params.set_plain_modulus(plain_modulus);
