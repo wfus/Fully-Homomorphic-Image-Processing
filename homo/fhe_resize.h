@@ -8,6 +8,7 @@
 #include <chrono>
 #include <random>
 #include <cmath>
+#include <fstream>
 
 #include "seal/seal.h"
 #include <opencv2/opencv.hpp>
@@ -31,6 +32,42 @@ void resize_image_opencv(const char* im_name, int new_width, int new_height) {
     imshow("Result", resized_image);
     waitKey(0);
 }
+
+
+void compare_resize_opencv(const char* im_name, int new_width, int new_height,
+                           std::vector<uint8_t> &interleaved) {
+    // Convert interleaved to BGR to be the same as OPENCV, rip
+
+    std::vector<uint8_t> bgr_interleaved;
+    for (int i = 0; i < interleaved.size(); i += 3) {
+        bgr_interleaved.push_back(interleaved[i+2]);
+        bgr_interleaved.push_back(interleaved[i+1]);
+        bgr_interleaved.push_back(interleaved[i+0]);
+    }
+    Mat image;
+    Mat resized_image;
+    image = imread(im_name, IMREAD_COLOR);
+    Size size(new_width, new_height);
+    resize(image, resized_image, size, 0, 0, INTER_LINEAR);
+
+    // Compare bgr_interleaved with RESIZE_PICTURE
+    int running_error = 0;
+    for (int i = 0; i < new_height; i++) {
+        for (int j = 0; j < new_width; j++) {
+            Vec3b bgr_pixel = resized_image.at<Vec3b>(i, j);
+            uint8_t blue = bgr_interleaved[i*new_width*3 + j*3 + 0];
+            uint8_t green = bgr_interleaved[i*new_width*3 + j*3 + 1];
+            uint8_t red = bgr_interleaved[i*new_width*3 + j*3 + 2];
+            running_error += (bgr_pixel.val[0]-blue)*(bgr_pixel.val[0]-blue);
+            running_error += (bgr_pixel.val[1]-green)*(bgr_pixel.val[1]-green);
+            running_error += (bgr_pixel.val[2]-red)*(bgr_pixel.val[2]-red);
+        }
+    }
+    double average_error = ((double) running_error) / (3 * new_width * new_height);
+    double rms_error = std::sqrt(average_error);
+    std::cout << "RMSError," << rms_error << std::endl;
+}
+
 
 
 void show_image(const char* im_name) {
@@ -313,17 +350,16 @@ void ResizeImage (String infile_str, int original_width, int original_height,
     destImage.pixels = dest_cpixels;
     
     for (int y = 0; y < destImage.height; ++y){
-        std::cout << std::endl << "Row " << y << std::endl;
+        // std::cout << std::endl << "Row " << y << std::endl;
         float v = float(y) / float(destImage.height - 1) * float(srcImage.height) - 0.5;
-        std::cout << read << std::endl;
+        // std::cout << read << std::endl;
         int new_start = (int(v) - init_rows / 2 + 1) * srcImage.width; 
-        std::cout << srcImage.start << '\t' << new_start << '\t' << srcImage.start + init_rows / 2 * srcImage.width << std::endl;
+        // std::cout << srcImage.start << '\t' << new_start << '\t' << srcImage.start + init_rows / 2 * srcImage.width << std::endl;
         if (new_start > srcImage.start && 
-                srcImage.start / srcImage.width + init_rows / 2 < srcImage.height) {
-            std::cout << "Changing image vector" << std::endl;
+                srcImage.start / srcImage.width + init_rows < srcImage.height) {
             std::vector<std::vector<Ciphertext>> new_pixels;
             int present = 0;
-            for (int i = new_start - srcImage.start; i < init_rows / 2 * srcImage.width; i++) {
+            for (int i = new_start - srcImage.start; i < init_rows * srcImage.width; i++) {
                 new_pixels.push_back(srcImage.pixels[i]);
                 present++;
             }
