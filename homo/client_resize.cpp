@@ -25,6 +25,7 @@ int main(int argc, const char** argv) {
     int coeff_modulus = COEFF_MODULUS;
     int resized_width = 0;
     int resized_height = 0;
+    bool verbose = false;
 
     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
@@ -33,6 +34,7 @@ int main(int argc, const char** argv) {
         options.add_options()
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
+            ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
             ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
             ("c,cfile", "Filename for ciphertext result file to be checked for correctness", cxxopts::value<std::string>())
@@ -126,8 +128,8 @@ int main(int argc, const char** argv) {
         public_key.save(pkfile);
         secret_key.save(skfile);
         diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "KeyGen: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+        // std::cout << "KeyGen: ";
+        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
 
@@ -144,18 +146,21 @@ int main(int argc, const char** argv) {
         // Write to ciphertext as RGBRGBRGBRGB row by row. 
         std::ofstream myfile;
         myfile.open(ctext_outfile.c_str());
-        std::cout << width << " " << height << std::endl;
-        start = std::chrono::steady_clock::now(); 
+        // std::cout << width << " " << height << std::endl;
+       
         Ciphertext c;
         for (int i = 0; i < width * height * channels; i++) {
+            start = std::chrono::steady_clock::now(); 
             encryptor.encrypt(encoder.encode(image_data[i]), c);
+            diff = std::chrono::steady_clock::now() - start; 
+            std::cout << chrono::duration<double, milli>(diff).count() << ',';
             c.save(myfile); 
-            if (i % 100 == 0) std::cout << "Encoded "<< i << " intensities..." << std::endl;
+            
         }
-        diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "EncryptWrite: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << std::endl;
-        std::cout << "EncryptWritePerPixel: " << chrono::duration<double, milli>(diff).count()/(width*height) << std::endl;
+        std::cout << std::endl;
+        // std::cout << "EncryptWrite: ";
+        // std::cout << chrono::duration<double, milli>(diff).count() << std::endl;
+        // std::cout << "EncryptWritePerPixel: " << chrono::duration<double, milli>(diff).count()/(width*height) << std::endl;
         myfile.close();
     }
 
@@ -184,8 +189,8 @@ int main(int argc, const char** argv) {
         public_key.load(pkfile);
         secret_key.load(skfile);
         diff = std::chrono::steady_clock::now() - start; 
-        std::cout << "Key Load Time: ";
-        std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+        // std::cout << "Key Load Time: ";
+        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
         Encryptor encryptor(context, public_key);
@@ -197,20 +202,24 @@ int main(int argc, const char** argv) {
         // Read in the image as RGB interleaved...
         // Assuming that there are three channels
         std::ifstream instream;
-        std::cout << "Loading Ciphertexts now..." << std::endl; 
+        // std::cout << "Loading Ciphertexts now..." << std::endl; 
         instream.open(ctext_infile.c_str());
         std::vector<uint8_t> decrypted_image;
         Plaintext p;
         Ciphertext c;
         for (int i = 0; i < resized_width * resized_height * 3; i++) {
             c.load(instream);
+            start = std::chrono::steady_clock::now(); 
             decryptor.decrypt(c, p);
-            std::cout << i << '\t' << encoder.decode(p) << std::endl;
+            diff = std::chrono::steady_clock::now() - start; 
+            std::cout << chrono::duration<double, milli>(diff).count() << ',';
+            // std::cout << i << '\t' << encoder.decode(p) << std::endl;
             uint8_t pixel = (uint8_t) encoder.decode(p);
             CLAMP(pixel, 0, 255)
             decrypted_image.push_back(pixel);
         }
         instream.close();
+        std::cout << std::endl;
 
         // Display our decrypted image!
         show_image_rgb(resized_width, resized_height, decrypted_image);
