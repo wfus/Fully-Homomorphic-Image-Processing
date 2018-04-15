@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.1)
 set(CMAKE_C_COMPILER "gcc-7")
 set(CMAKE_CXX_COMPILER "g++-7")
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
 project(FHEVideo)
 
 include_directories(include)
@@ -15,9 +18,14 @@ link_directories(SEAL/bin)
 # Use OpenCV for reading in files and debugging
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
-
+message(STATUS "OpenCV library status:")
+message(STATUS "\tversion: ${OpenCV_VERSION}")
+message(STATUS "\tlibraries: ${OpenCV_LIBS}")
+message(STATUS "\tinnclude path: ${OpenCV_INCLUDE_DIRS}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -O3 -DHAVE_CONFIG_H -std=c++11 -pthread -g -Wno-narrowing")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++") 
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
 # Make the FHE demo programs and put them to BIN
