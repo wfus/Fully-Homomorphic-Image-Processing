@@ -63,7 +63,7 @@ void compare_resize_opencv(const char* im_name, int new_width, int new_height,
     }
     double average_error = ((double) running_error) / (3 * new_width * new_height);
     double rms_error = std::sqrt(average_error);
-    std::cout << "RMSError," << rms_error << std::endl;
+    std::cout << "RMSError," << rms_error << ',' << std::endl;
 }
 
 
@@ -347,11 +347,9 @@ void ResizeImage (String infile_str, int original_width, int original_height,
     destImage.pixels = dest_cpixels;
     
     for (int y = 0; y < destImage.height; ++y){
-        std::cout << std::endl << "Row " << y << std::endl;
+        // std::cout << std::endl << "Row " << y << std::endl;
         float v = float(y) / float(destImage.height - 1) * float(srcImage.height) - 0.5;
-        std::cout << read << std::endl;
         int new_start = min(int(v) - init_rows / 2 + 1, srcImage.height - init_rows) * srcImage.width; 
-        std::cout << new_start << '\t' << srcImage.start  << '\t' << srcImage.start + init_rows * srcImage.width << std::endl;
         if (new_start > srcImage.start) { 
 
             std::vector<std::vector<Ciphertext>> new_pixels;

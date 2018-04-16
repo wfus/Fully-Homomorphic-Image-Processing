@@ -155,7 +155,16 @@ int processBlock(FILE *fp, int &bitBuf, int &bitCnt, int* DU, float *fdtbl, int 
 int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
-    std::string test_filename("../image/boazbarak.jpg");
+    std::string test_filename("./image/test.jpg");
+    std::string ctext_outfile("./image/nothingpersonnel.txt");
+    std::string ctext_infile("./image/zoop.txt");
+    int n_number_coeffs = N_NUMBER_COEFFS;
+    int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
+    int n_poly_base = POLY_BASE;
+    int plain_modulus = PLAIN_MODULUS;
+    int coeff_modulus = COEFF_MODULUS;
+    bool verbose = false;
+
 
     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
@@ -164,7 +173,15 @@ int main(int argc, const char** argv) {
         options.add_options()
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
-            ("f,file", "Filename for input file to be homomorphically encrypted", cxxopts::value<std::string>())
+            ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
+            ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
+            ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
+             ("c,cfile", "Filename for ciphertext result file", cxxopts::value<std::string>())
+            ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
+            ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
+            ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
+            ("pmod", "Plaintext modulus", cxxopts::value<int>())
+            ("base", "Polynomial base used for fractional encoding (essentially a number base)", cxxopts::value<int>())
             ("help", "Print help");
 
         auto result = options.parse(argc, argv);
@@ -173,9 +190,20 @@ int main(int argc, const char** argv) {
             std::cout << options.help({"", "Group"}) << std::endl;
             exit(0);
         }
-        if (result.count("file")) {
-            test_filename = result["file"].as<std::string>();
-        } 
+        if (!recieving && !sending) {
+            std::cout << "Please either toggle sending or recieving by using the flags: " << std::endl;
+            std::cout << "\t--send or --recieve" << std::endl;
+            std::cout << options.help({"", "Group"}) << std::endl;
+            exit(0);
+        }
+        if (result.count("file")) test_filename = result["file"].as<std::string>();
+        if (result.count("outfile")) ctext_outfile = result["outfile"].as<std::string>();
+        if (result.count("cfile")) ctext_infile = result["cfile"].as<std::string>();
+        if (result.count("ncoeff")) n_number_coeffs = result["ncoeff"].as<int>(); 
+        if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
+        if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
+        if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
+        if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
     } 
     catch (const cxxopts::OptionException& e) {
         std::cout << "error parsing options: " << e.what() << std::endl;
@@ -192,13 +220,15 @@ int main(int argc, const char** argv) {
         //jo_write_jpg("../image/boazbarak.jpg", image_data, width, height, 3, 100);
 
 
-        // Encryption Parameters
+       // Encryption Parameters
         EncryptionParameters params;
-        params.set_poly_modulus("1x^8192 + 1");
-        params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
-        params.set_plain_modulus(PLAIN_MODULUS);
+        char poly_mod[16];
+        snprintf(poly_mod, 16, "1x^%i + 1", coeff_modulus);
+        params.set_poly_modulus(poly_mod);
+        params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
+        params.set_plain_modulus(plain_modulus);
         SEALContext context(params);
-        print_parameters(context);
+        // print_parameters(context);
 
         std::ofstream paramfile; 
         paramfile.open("../keys/params.txt");
@@ -264,7 +294,7 @@ int main(int argc, const char** argv) {
                 start = std::chrono::steady_clock::now();
                 encryptor.encrypt(encoder.encode(conv), c);
                 diff = std::chrono::steady_clock::now() - start; 
-                std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
+                std::cout << chrono::duration<double, milli>(diff).count() << ',';
                 c.save(myfile);
             }
             for (int j = 0; j < green_blocks[i].size(); j++) {
@@ -272,7 +302,7 @@ int main(int argc, const char** argv) {
                 start = std::chrono::steady_clock::now();
                 encryptor.encrypt(encoder.encode(conv), c);
                 diff = std::chrono::steady_clock::now() - start; 
-                std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
+                std::cout << chrono::duration<double, milli>(diff).count() << ',';
                 c.save(myfile);
             }
             for (int j = 0; j < blue_blocks[i].size(); j++) {
@@ -280,7 +310,7 @@ int main(int argc, const char** argv) {
                 start = std::chrono::steady_clock::now();
                 encryptor.encrypt(encoder.encode(conv), c);
                 diff = std::chrono::steady_clock::now() - start; 
-                std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
+                std::cout << chrono::duration<double, milli>(diff).count() << ',';
                 c.save(myfile);
             }
             // if (i % 10 == 0) std::cout << "Encoded "<< i << " blocks..." << std::endl;
@@ -295,8 +325,8 @@ int main(int argc, const char** argv) {
         // We are recieving the results and then doing the actual compression
         // Note that it is very difficult to do compression with purely FHE, 
         // it is possible to do decompression though.
-        const char* infile = "../image/zoop.txt";
-        const char* outfile = "../image/new_boazzzzzz.jpg";
+        const char* infile = ctext_infile.c_str();
+        const char* outfile = ctext_outfile.c_str();
 
         int QUALITY = 0;
 
@@ -312,11 +342,13 @@ int main(int argc, const char** argv) {
 
         // Encryption Parameters
         EncryptionParameters params;
-        params.set_poly_modulus("1x^8192 + 1");
-        params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
-        params.set_plain_modulus(PLAIN_MODULUS);
+        char poly_mod[16];
+        snprintf(poly_mod, 16, "1x^%i + 1", coeff_modulus);
+        params.set_poly_modulus(poly_mod);
+        params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
+        params.set_plain_modulus(plain_modulus);
         SEALContext context(params);
-        print_parameters(context);
+        // print_parameters(context);
 
 
         // Get keys
@@ -405,7 +437,7 @@ int main(int argc, const char** argv) {
                     start = std::chrono::steady_clock::now();
                     decryptor.decrypt(c, p);
                     diff = std::chrono::steady_clock::now() - start; 
-                    std::cout << chrono::duration<double, milli>(diff).count() << ',' << std::endl;
+                    std::cout << chrono::duration<double, milli>(diff).count() << ',';
                     v = encoder.decode(p);
                     // std::cout << v << ", ";
                     block_zz[k][s_ZigZag[j]] = (int)(v < 0 ? ceilf(v - 0.5f) : floorf(v + 0.5f));

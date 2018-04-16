@@ -90,11 +90,13 @@ int main(int argc, const char** argv) {
 
     // Encryption Parameters
     EncryptionParameters params;
-    params.set_poly_modulus("1x^8192 + 1");
+    char poly_mod[16];
+    snprintf(poly_mod, 16, "1x^%i + 1", coeff_modulus);
+    params.set_poly_modulus(poly_mod);
     params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
     params.set_plain_modulus(plain_modulus);
     SEALContext context(params);
-    print_parameters(context);
+    // print_parameters(context);
 
 
     // Generate keys
@@ -124,6 +126,8 @@ int main(int argc, const char** argv) {
     std::ofstream outfile;
     outfile.open(ctext_outfile.c_str()); 
     
+    String op = bicubic ? "Cubic," : "Linear,";
+    std::cout << op;
     int INTER_TYPE = bicubic ? BICUBIC : BILINEAR;
     SImageData resize_im;
     ResizeImage(
