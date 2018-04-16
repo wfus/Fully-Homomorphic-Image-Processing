@@ -7,7 +7,7 @@ WIDTH_HEIGHT_PAIRS = [(10, 10), (20, 20), (30, 30)]
 
 def log_name(imname, width, height, pcoeff, fcoeff, pmod):
     LOG_DIR = "../logs"
-    return "{}/{}_{}-{}_{}_{}_{}.txt".format(LOG_DIR, imname, width, height, pcoeff, fcoeff, pmod)
+    return "{}/{}_{}_{}_{}_{}_{}.txt".format(LOG_DIR, imname, width, height, pcoeff, fcoeff, pmod)
 
 
 def call_command(image, width, height, logname, outname):
@@ -27,6 +27,6 @@ if __name__ == '__main__':
     for image_name, short_name in IMAGE_NAMES:
         for width, height in WIDTH_HEIGHT_PAIRS:
             logname = log_name(short_name, width, height, 0, 0, 0)
-            outname = "image/{}_{}-{}.png".format(short_name, width, height)
+            outname = "image/{}_{}_{}.png".format(short_name, width, height)
             call_command(image_name, width, height, logname, outname)
           
