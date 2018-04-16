@@ -41,7 +41,7 @@ if __name__ == '__main__':
             logname = log_resize(short_name, width, height, 0, 0, 0)
             outname = "image/{}_{}_{}.png".format(short_name, width, height)
             call_resize(image_name, width, height, logname, outname)
-    for image_name, short_name in IMAGE_NAMES:
+        
         logname = log_jpeg(short_name, width, height, 0, 0, 0)
         outname = "image/new_{}.jpg".format(short_name)
         call_jpeg(image_name, logname, outname)
