@@ -1,7 +1,5 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
-#include "jpge.h"
-#include "stb_image.c"
 #include "cxxopts.h"
 
 using namespace seal;
