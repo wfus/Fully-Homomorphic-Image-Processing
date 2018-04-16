@@ -8,17 +8,7 @@ using namespace seal;
 
 auto start = std::chrono::steady_clock::now();
 auto diff = std::chrono::steady_clock::now() - start;
-void fhe_jpg(std::vector<Ciphertext> &y,
-             std::vector<Ciphertext> &cb,
-             std::vector<Ciphertext> &cr,
-             int width, 
-             int height,
-             Evaluator &evaluator,
-             FractionalEncoder &encoder,
-             Encryptor &encryptor);
-void save_computed_blocks_interleaved_ycc(std::vector<std::vector<Ciphertext>> &y,
-                                          std::vector<std::vector<Ciphertext>> &cb,
-                                          std::vector<std::vector<Ciphertext>> &cr);
+
 void save_three_blocks_interleaved_ycc(std::ofstream &file,
                                        std::vector<Ciphertext> &y,
                                        std::vector<Ciphertext> &cb,
@@ -84,8 +74,6 @@ int main(int argc, const char** argv) {
         exit(1);
     }
 
-
-
     // Encryption Parameters
     EncryptionParameters params;
     char poly_mod[16];
@@ -101,14 +89,10 @@ int main(int argc, const char** argv) {
     std::ifstream pkfile, skfile;
     pkfile.open("./keys/pubkey.txt");
     skfile.open("./keys/seckey.txt");
-    // start = std::chrono::steady_clock::now(); 
     PublicKey public_key;
     SecretKey secret_key;
     public_key.load(pkfile);
     secret_key.load(skfile);
-    // diff = std::chrono::steady_clock::now() - start; 
-    // std::cout << "Key Load Time: ";
-    // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
     pkfile.close(); skfile.close();    
   
     // Encrytor and decryptor setup
@@ -156,54 +140,11 @@ int main(int argc, const char** argv) {
         encrypted_dct(blue, evaluator, encoder, encryptor);
         save_three_blocks_interleaved_ycc(outfile, red, green, blue);
         std::cout << std::endl;
-        // std::cout << "Finished " << curr_block << " block triples..." << std::endl;
     }
-    // std::cout << "DCT and File IO: ";
-    // diff = std::chrono::steady_clock::now() - start; 
-    // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-    
     myfile.close();
     outfile.close();  
     return 0;
-
-     // for (int i = 0; i < red.size() && i < 64; i++) {
-    //     Plaintext p1, p2, p3;
-    //     decryptor.decrypt(red[i], p1);
-    //     decryptor.decrypt(green[i], p2);
-    //     decryptor.decrypt(blue[i], p3);
-    //     std::cout << "[" << encoder.decode(p1) << " " << encoder.decode(p2) << " " << encoder.decode(p3) << "] ";
-    //     if ((i+1) % WIDTH == 0) std::cout << std::endl;
-    // }
 }
-
-void fhe_jpg(std::vector<Ciphertext> &y,
-             std::vector<Ciphertext> &cb,
-             std::vector<Ciphertext> &cr,
-             int width, 
-             int height,
-             Evaluator &evaluator,
-             FractionalEncoder &encoder,
-             Encryptor &encryptor) {
-    // Perform DCT and quantization
-    start = std::chrono::steady_clock::now(); 
-    std::vector<std::vector<Ciphertext>> y_blocks = split_image_eight_block(y, width, height);
-    std::vector<std::vector<Ciphertext>> cb_blocks = split_image_eight_block(cb, width, height);
-    std::vector<std::vector<Ciphertext>> cr_blocks = split_image_eight_block(cr, width, height);
-    for (int i = 0; i < y_blocks.size(); i++) {
-        encrypted_dct(y_blocks[i], evaluator, encoder, encryptor);
-        // quantize_fhe(y_blocks[i], S_STD_LUM_QUANT, evaluator, encoder, encryptor);
-        encrypted_dct(cb_blocks[i], evaluator, encoder, encryptor);
-        // quantize_fhe(cb_blocks[i], S_STD_CROMA_QUANT, evaluator, encoder, encryptor);
-        encrypted_dct(cr_blocks[i], evaluator, encoder, encryptor);
-        // quantize_fhe(cr_blocks[i], S_STD_CROMA_QUANT, evaluator, encoder, encryptor);
-    }
-    diff = std::chrono::steady_clock::now() - start; 
-    std::cout << "DCT/QUANT calculation time: ";
-    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-
-    save_computed_blocks_interleaved_ycc(y_blocks, cb_blocks, cr_blocks); 
-}
-
 
 // We want to store the output as blocks of Y Cb Cr interleaved by block
 // This should take in three blocks, one Y block, one Cb block, and one Cr block
@@ -214,31 +155,4 @@ void save_three_blocks_interleaved_ycc(std::ofstream &myfile,
     for (int i = 0; i < y.size(); i++)  { y[i].save(myfile);  }
     for (int i = 0; i < cb.size(); i++) { cb[i].save(myfile); }
     for (int i = 0; i < cr.size(); i++) { cr[i].save(myfile); }
-}
-
-
-
-// We want to store the output as blocks of Y Cb Cr interleaved by block
-// This is why Nico is moving out
-void save_computed_blocks_interleaved_ycc(std::vector<std::vector<Ciphertext>> &y,
-                                          std::vector<std::vector<Ciphertext>> &cb,
-                                          std::vector<std::vector<Ciphertext>> &cr) {
-    std::ofstream myfile;
-    myfile.open("./image/zoop.txt");
-    start = std::chrono::steady_clock::now(); 
-    for (int i = 0; i < y.size(); i++) {
-        for (int j = 0; j < y[i].size(); j++) {
-            y[i][j].save(myfile);
-        }
-        for (int j = 0; j < cb[i].size(); j++) {
-            cb[i][j].save(myfile);
-        }
-        for (int j = 0; j < cr[i].size(); j++) {
-            cr[i][j].save(myfile);
-        }
-    }
-    myfile.close();
-    diff = std::chrono::steady_clock::now() - start; 
-    std::cout << "Ciphertext write time: ";
-    std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
 }
