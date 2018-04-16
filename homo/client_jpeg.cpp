@@ -156,6 +156,7 @@ int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
     std::string test_filename("../image/boazbarak.jpg");
+    std::string test_output("../image/new_boaz.jpg");
 
     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
@@ -165,6 +166,7 @@ int main(int argc, const char** argv) {
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
             ("f,file", "Filename for input file to be homomorphically encrypted", cxxopts::value<std::string>())
+            ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
             ("help", "Print help");
 
         auto result = options.parse(argc, argv);
@@ -176,6 +178,9 @@ int main(int argc, const char** argv) {
         if (result.count("file")) {
             test_filename = result["file"].as<std::string>();
         } 
+        if (result.count("outfile")) {
+            test_output = result["outfile"].as<std::string>();
+        }
     } 
     catch (const cxxopts::OptionException& e) {
         std::cout << "error parsing options: " << e.what() << std::endl;
@@ -194,7 +199,9 @@ int main(int argc, const char** argv) {
 
         // Encryption Parameters
         EncryptionParameters params;
-        params.set_poly_modulus("1x^8192 + 1");
+        char poly_mod[16];
+        snprintf(poly_mod, 16, "1x^%i + 1", COEFF_MODULUS);
+        params.set_poly_modulus(poly_mod);
         params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
         params.set_plain_modulus(PLAIN_MODULUS);
         SEALContext context(params);
@@ -296,7 +303,7 @@ int main(int argc, const char** argv) {
         // Note that it is very difficult to do compression with purely FHE, 
         // it is possible to do decompression though.
         const char* infile = "../image/zoop.txt";
-        const char* outfile = "../image/new_boazzzzzz.jpg";
+        const char* outfile = test_output.c_str();
 
         int QUALITY = 0;
 
@@ -312,7 +319,9 @@ int main(int argc, const char** argv) {
 
         // Encryption Parameters
         EncryptionParameters params;
-        params.set_poly_modulus("1x^8192 + 1");
+        char poly_mod[16];
+        snprintf(poly_mod, 16, "1x^%i + 1", COEFF_MODULUS);
+        params.set_poly_modulus(poly_mod);
         params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
         params.set_plain_modulus(PLAIN_MODULUS);
         SEALContext context(params);
