@@ -1,8 +1,5 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
-#include "jpge.h"
-#include "stb_image.c"
-#include "jo_jpeg.h"
 #include "cxxopts.h"
 
 using namespace seal;
@@ -78,7 +75,6 @@ int main(int argc, const char** argv) {
         int width = 0, height = 0, actual_composition = 0;
         uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
 
-        //jo_write_jpg("./image/boazbarak.jpg", image_data, width, height, 3, 100);
 
 
        // Encryption Parameters
@@ -307,7 +303,9 @@ int main(int argc, const char** argv) {
         putc(0xD9, fp);
         myfile.close();
         fclose(fp);
-
+        
+        // compare FHE jpeg to jo_jpeg
+        compare_jpeg_jojpeg(test_filename.c_str(), test_output.c_str(), "./image/jo_image.jpg");
     }
 
     return 0;

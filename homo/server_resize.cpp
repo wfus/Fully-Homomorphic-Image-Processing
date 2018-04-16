@@ -2,7 +2,6 @@
 #include "fhe_image.h"
 #include "fhe_resize.h"
 #include "jpge.h"
-#include "stb_image.c"
 #include "cxxopts.h"
 
 using namespace seal;
