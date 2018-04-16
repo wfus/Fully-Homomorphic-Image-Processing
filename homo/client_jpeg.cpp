@@ -303,6 +303,9 @@ int main(int argc, const char** argv) {
         putc(0xD9, fp);
         myfile.close();
         fclose(fp);
+        
+        // compare FHE jpeg to jo_jpeg
+        compare_jpeg_jojpeg(test_filename.c_str(), test_output.c_str(), "./image/jo_image.jpg");
     }
 
     return 0;
