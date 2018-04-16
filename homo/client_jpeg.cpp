@@ -158,6 +158,7 @@ int main(int argc, const char** argv) {
     std::string test_filename("./image/test.jpg");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
+    std::string test_output("./image/test_out.jpg");
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
@@ -175,8 +176,9 @@ int main(int argc, const char** argv) {
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
             ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
-            ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
-             ("c,cfile", "Filename for ciphertext result file", cxxopts::value<std::string>())
+            ("c,coutfile", "Filename for ciphertext to be saved to", cxxopts::value<std::string>())
+            ("i,cinfile", "Filename for ciphertext to be received", cxxopts::value<std::string>())
+            ("o,outfile", "Filename for result image", cxxopts::value<std::string>())
             ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
             ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
@@ -197,8 +199,9 @@ int main(int argc, const char** argv) {
             exit(0);
         }
         if (result.count("file")) test_filename = result["file"].as<std::string>();
-        if (result.count("outfile")) ctext_outfile = result["outfile"].as<std::string>();
-        if (result.count("cfile")) ctext_infile = result["cfile"].as<std::string>();
+        if (result.count("coutfile")) ctext_outfile = result["coutfile"].as<std::string>();
+        if (result.count("cinfile")) ctext_infile = result["cinfile"].as<std::string>();
+        if (result.count("outfile")) test_output = result["outfile"].as<std::string>();
         if (result.count("ncoeff")) n_number_coeffs = result["ncoeff"].as<int>(); 
         if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
         if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
@@ -217,7 +220,7 @@ int main(int argc, const char** argv) {
         // The image will be interleaved r g b r g b ...
         // std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
 
-        //jo_write_jpg("../image/boazbarak.jpg", image_data, width, height, 3, 100);
+        //jo_write_jpg("./image/boazbarak.jpg", image_data, width, height, 3, 100);
 
 
        // Encryption Parameters
@@ -231,30 +234,29 @@ int main(int argc, const char** argv) {
         // print_parameters(context);
 
         std::ofstream paramfile; 
-        paramfile.open("../keys/params.txt");
+        paramfile.open("./keys/params.txt");
         paramfile << width << " ";
         paramfile << height << " ";
         paramfile << actual_composition << " ";
-        paramfile << PLAIN_MODULUS << std::endl;
+        paramfile << plain_modulus << std::endl;
         paramfile.close();
 
 
         // Generate keys
         // and save them to file
         std::ofstream pkfile, skfile;
-        pkfile.open("../keys/pubkey.txt");
-        skfile.open("../keys/seckey.txt");
-        start = std::chrono::steady_clock::now(); 
+        pkfile.open("./keys/pubkey.txt");
+        skfile.open("./keys/seckey.txt");
+        // start = std::chrono::steady_clock::now(); 
         KeyGenerator keygen(context);
         auto public_key = keygen.public_key();
         auto secret_key = keygen.secret_key();
         public_key.save(pkfile);
         secret_key.save(skfile);
-        diff = std::chrono::steady_clock::now() - start; 
+        // diff = std::chrono::steady_clock::now() - start; 
         // std::cout << "KeyGen: ";
         // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
-
 
         // Encrytor and decryptor setup
         Encryptor encryptor(context, public_key);
@@ -264,7 +266,7 @@ int main(int argc, const char** argv) {
         // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)
         // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
-        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
+        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
         // Write the ciphertext to file block by block - since most times
         // ciphertext doesn't fit directly in RAM
@@ -283,11 +285,12 @@ int main(int argc, const char** argv) {
         blue_blocks = split_image_eight_block(blue, width, height);
 
         std::ofstream myfile;
-        myfile.open("../image/nothingpersonnel.txt");
+        myfile.open(ctext_outfile.c_str());
         // std::cout << width << " " << height << std::endl;
         start = std::chrono::steady_clock::now(); 
         Ciphertext c;
         double conv;
+        std::cout << "Encryption,";
         for (int i = 0; i < red_blocks.size(); i++) {
             for (int j = 0; j < red_blocks[i].size(); j++) {
                 conv = red_blocks[i][j];
@@ -313,11 +316,8 @@ int main(int argc, const char** argv) {
                 std::cout << chrono::duration<double, milli>(diff).count() << ',';
                 c.save(myfile);
             }
-            // if (i % 10 == 0) std::cout << "Encoded "<< i << " blocks..." << std::endl;
         }
-        // diff = std::chrono::steady_clock::now() - start; 
-        // std::cout << "Ciphertext write: ";
-        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
+        std::cout << std::endl;
         myfile.close();
     }
     else
@@ -326,14 +326,14 @@ int main(int argc, const char** argv) {
         // Note that it is very difficult to do compression with purely FHE, 
         // it is possible to do decompression though.
         const char* infile = ctext_infile.c_str();
-        const char* outfile = ctext_outfile.c_str();
+        const char* outfile = test_output.c_str();
 
         int QUALITY = 0;
 
         // Read encryption parameters from file
         int WIDTH = 0, HEIGHT = 0;
         std::ifstream paramfile;
-        paramfile.open("../keys/params.txt");
+        paramfile.open("./keys/params.txt");
         paramfile >> WIDTH;
         paramfile >> HEIGHT;
         // std::cout << WIDTH << " " << HEIGHT << std::endl;
@@ -353,14 +353,14 @@ int main(int argc, const char** argv) {
 
         // Get keys
         std::ifstream pkfile, skfile;
-        pkfile.open("../keys/pubkey.txt");
-        skfile.open("../keys/seckey.txt");
-        start = std::chrono::steady_clock::now(); 
+        pkfile.open("./keys/pubkey.txt");
+        skfile.open("./keys/seckey.txt");
+        // start = std::chrono::steady_clock::now(); 
         PublicKey public_key;
         SecretKey secret_key;
         public_key.load(pkfile);
         secret_key.load(skfile);
-        diff = std::chrono::steady_clock::now() - start; 
+        // diff = std::chrono::steady_clock::now() - start; 
         // std::cout << "Key Load Time: ";
         // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
@@ -373,8 +373,7 @@ int main(int argc, const char** argv) {
         // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)
         // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
-
-        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
+        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
         int block_pix = BLOCK_SIZE * BLOCK_SIZE;
         // int num_blocks = ((WIDTH + BLOCK_SIZE - 1) / BLOCK_SIZE) * ((HEIGHT + BLOCK_SIZE - 1) / BLOCK_SIZE);
@@ -447,6 +446,7 @@ int main(int argc, const char** argv) {
             DCU = processBlock(fp, bitBuf, bitCnt, block_zz[1], fdtbl_UV, DCU, UVDC_HT, UVAC_HT);
             DCV = processBlock(fp, bitBuf, bitCnt, block_zz[2], fdtbl_UV, DCV, UVDC_HT, UVAC_HT);
         }
+        std::cout << std::endl;
         // Write ending sequence
         static const unsigned short fillBits[] = {0x7F, 7};
 	    writeBits(fp, bitBuf, bitCnt, fillBits);
