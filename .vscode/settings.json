@@ -35,7 +35,9 @@
         "*.ipp": "cpp",
         "slist": "cpp",
         "cctype": "cpp",
-        "cstdlib": "cpp"
+        "cstdlib": "cpp",
+        "chrono": "cpp",
+        "stb_image.c": "cpp"
     },
     "python.linting.enabled": false
 }
