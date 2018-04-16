@@ -36,5 +36,6 @@
         "slist": "cpp",
         "cctype": "cpp",
         "cstdlib": "cpp"
-    }
+    },
+    "python.linting.enabled": false
 }
