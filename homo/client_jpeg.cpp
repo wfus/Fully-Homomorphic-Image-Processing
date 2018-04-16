@@ -424,7 +424,7 @@ int main(int argc, const char** argv) {
         myfile.open(infile);
         int bitBuf=0, bitCnt=0, DCY=0, DCU=0, DCV=0;
         double v = 0;
-        start = std::chrono::steady_clock::now(); 
+        std::cout << "Decryption,";
         for (int i = 0; i < num_blocks; i++) {
             int block_zz[3][block_pix];
             for (int k = 0; k < 3; k++) {
