@@ -123,13 +123,13 @@ int main(int argc, const char** argv) {
         std::ofstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        start = std::chrono::steady_clock::now(); 
+        // start = std::chrono::steady_clock::now(); 
         KeyGenerator keygen(context);
         auto public_key = keygen.public_key();
         auto secret_key = keygen.secret_key();
         public_key.save(pkfile);
         secret_key.save(skfile);
-        diff = std::chrono::steady_clock::now() - start; 
+        // diff = std::chrono::steady_clock::now() - start; 
         // std::cout << "KeyGen: ";
         // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
@@ -143,7 +143,7 @@ int main(int argc, const char** argv) {
         // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)
         // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
-        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
+        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
         // Write to ciphertext as RGBRGBRGBRGB row by row. 
         std::ofstream myfile;
@@ -188,12 +188,12 @@ int main(int argc, const char** argv) {
         std::ifstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        start = std::chrono::steady_clock::now(); 
+        // start = std::chrono::steady_clock::now(); 
         PublicKey public_key;
         SecretKey secret_key;
         public_key.load(pkfile);
         secret_key.load(skfile);
-        diff = std::chrono::steady_clock::now() - start; 
+        // diff = std::chrono::steady_clock::now() - start; 
         // std::cout << "Key Load Time: ";
         // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
