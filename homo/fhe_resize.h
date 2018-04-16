@@ -63,7 +63,7 @@ void compare_resize_opencv(const char* im_name, int new_width, int new_height,
     }
     double average_error = ((double) running_error) / (3 * new_width * new_height);
     double rms_error = std::sqrt(average_error);
-    std::cout << "RMSError," << rms_error << std::endl;
+    std::cout << "RMSError," << rms_error << ',' << std::endl;
 }
 
 

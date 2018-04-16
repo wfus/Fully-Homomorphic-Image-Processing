@@ -84,7 +84,7 @@ std::vector<double> read_image(std::string fname) {
     myfile.open(fname.c_str());
     myfile >> w;
     myfile >> h;
-    std::cout << "Read in " << fname << "with dimensions: " << w << " x " << h << std::endl;
+    // std::cout << "Read in " << fname << "with dimensions: " << w << " x " << h << std::endl;
 
     float tmp;
     for (int i = 0; i < w*h; i++) {
@@ -102,7 +102,7 @@ std::vector<double> read_image(std::string fname, int* w, int *h) {
     myfile.open(fname.c_str());
     myfile >> *w;
     myfile >> *h;
-    std::cout << "Read in " << fname << "with dimensions: " << w << " x " << h << std::endl;
+    // std::cout << "Read in " << fname << "with dimensions: " << w << " x " << h << std::endl;
 
     float tmp;
     for (int i = 0; i < (*w) * (*h); i++) {
