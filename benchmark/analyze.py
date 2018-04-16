@@ -16,12 +16,12 @@ if __name__ == '__main__':
         all_data = {}
         for line in f:
             data = line.split(',')[:-1]
-            val = list(map(lambda x: float(x), data[1:]))
             if data[0] in all_data:
-                all_data[data[0]].append(val)
+                all_data[data[0]] += data[1:]
             else:
-                all_data[data[0]] = val
-            print(data[0])
+                all_data[data[0]] = data[1:]
+            # print(all_data[data[0]])
         for key in all_data:
-            avg = reduce(lambda x, y: x + y, all_data[key]) / len(all_data[key])
+            val = list(map(lambda x: float(x), all_data[key]))
+            avg = reduce(lambda x, y: x + y, val) / len(val)
             print(key + ',' + str(avg))
