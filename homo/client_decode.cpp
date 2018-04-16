@@ -2,7 +2,6 @@
 #include "fhe_decode.h"
 #include "fhe_image.h"
 #include "cxxopts.h"
-#include "stb_image.c"
 
 using namespace seal;
 

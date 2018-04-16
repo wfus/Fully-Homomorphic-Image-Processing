@@ -11,6 +11,9 @@
 
 
 #include "seal/seal.h"
+#include "jo_jpeg.h"
+#include "stb_image.h"
+
 
 using namespace seal;
 
@@ -500,5 +503,15 @@ void print_parameters(const SEALContext &context) {
     std::cout << "\\ noise_standard_deviation: " << context.noise_standard_deviation() << std::endl;
     std::cout << std::endl;
 } 
+
+void compare_jpeg_jojpeg(const char* original_image, const char* output_image, 
+                            const char* jo_image, int width, int height) {
+    // Convert interleaved to BGR to be the same as OPENCV, rip
+    int read_width, read_height, actual_composition;
+    uint8_t *image_data = stbi_load(original_image, &read_width, &read_height, &actual_composition, 3);
+    jo_write_jpg(jo_image, image_data, width, height, 3, QUALITY);
+    uint8_t *output_data = stbi_load(output_image, &read_width, &read_height, &actual_composition, 3);
+    uint8_t *jo_data = stbi_load(jo_image, &read_width, &read_height, &actual_composition, 3);
+}
 
 #endif
