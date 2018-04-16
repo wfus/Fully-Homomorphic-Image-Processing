@@ -44,7 +44,9 @@ int main(int argc, char** argv) {
 
     // Encryption Parameters
     EncryptionParameters params;
-    params.set_poly_modulus("1x^8192 + 1");
+    char poly_mod[16];
+    snprintf(poly_mod, 16, "1x^%i + 1", COEFF_MODULUS);
+    params.set_poly_modulus(poly_mod);
     params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
     params.set_plain_modulus(PLAIN_MODULUS);
     SEALContext context(params);
