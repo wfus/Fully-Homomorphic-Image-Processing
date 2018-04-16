@@ -13,8 +13,15 @@ if __name__ == '__main__':
         # im_name, w, h, pcoeff, fcoeff, pmod = short_name.split("_")
         print(fname) 
         f = open(fname, 'r')
+        all_data = {}
         for line in f:
             data = line.split(',')[:-1]
-            val = list(map(lambda x: float(x), data[1:]))
-            avg = reduce(lambda x, y: x + y, val) / (len(data) - 1)
-            print(data[0] + ',' + str(avg))
+            if data[0] in all_data:
+                all_data[data[0]] += data[1:]
+            else:
+                all_data[data[0]] = data[1:]
+            # print(all_data[data[0]])
+        for key in all_data:
+            val = list(map(lambda x: float(x), all_data[key]))
+            avg = reduce(lambda x, y: x + y, val) / len(val)
+            print(key + ',' + str(avg))
