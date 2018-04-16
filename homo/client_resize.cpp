@@ -92,7 +92,7 @@ int main(int argc, const char** argv) {
         int width = 0, height = 0, actual_composition = 0;
         uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
         // The image will be interleaved r g b r g b ...
-        std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
+        // std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
         int channels = requested_composition;
         // std::vector<uint8_t> original_image;
         // for (int i = 0; i < width * height * channels; i++) {
@@ -102,11 +102,13 @@ int main(int argc, const char** argv) {
 
         // Encryption Parameters
         EncryptionParameters params;
-        params.set_poly_modulus("1x^8192 + 1");
+        char poly_mod[16];
+        snprintf(poly_mod, 16, "1x^%i + 1", coeff_modulus);
+        params.set_poly_modulus(poly_mod);
         params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
         params.set_plain_modulus(plain_modulus);
         SEALContext context(params);
-        print_parameters(context);
+        // print_parameters(context);
 
         std::ofstream paramfile; 
         paramfile.open("./keys/params.txt");
@@ -149,6 +151,7 @@ int main(int argc, const char** argv) {
         // std::cout << width << " " << height << std::endl;
        
         Ciphertext c;
+        std::cout << "Encryption,";
         for (int i = 0; i < width * height * channels; i++) {
             start = std::chrono::steady_clock::now(); 
             encryptor.encrypt(encoder.encode(image_data[i]), c);
@@ -172,11 +175,13 @@ int main(int argc, const char** argv) {
         // Encryption Parameters
         EncryptionParameters params;
 
-        params.set_poly_modulus("1x^8192 + 1");
+        char poly_mod[16];
+        snprintf(poly_mod, 16, "1x^%i + 1", coeff_modulus);
+        params.set_poly_modulus(poly_mod);
         params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
         params.set_plain_modulus(plain_modulus);
         SEALContext context(params);
-        print_parameters(context);
+        // print_parameters(context);
 
 
         // Get keys
@@ -207,6 +212,7 @@ int main(int argc, const char** argv) {
         std::vector<uint8_t> decrypted_image;
         Plaintext p;
         Ciphertext c;
+        std::cout << "Decryption,";
         for (int i = 0; i < resized_width * resized_height * 3; i++) {
             c.load(instream);
             start = std::chrono::steady_clock::now(); 
