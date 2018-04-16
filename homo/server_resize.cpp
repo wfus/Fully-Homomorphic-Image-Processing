@@ -96,7 +96,7 @@ int main(int argc, const char** argv) {
     params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
     params.set_plain_modulus(plain_modulus);
     SEALContext context(params);
-    print_parameters(context);
+    // print_parameters(context);
 
 
     // Generate keys
@@ -126,6 +126,8 @@ int main(int argc, const char** argv) {
     std::ofstream outfile;
     outfile.open(ctext_outfile.c_str()); 
     
+    String op = bicubic ? "Cubic," : "Linear,";
+    std::cout << op;
     int INTER_TYPE = bicubic ? BICUBIC : BILINEAR;
     SImageData resize_im;
     ResizeImage(

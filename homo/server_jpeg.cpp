@@ -2,6 +2,7 @@
 #include "fhe_image.h"
 #include "jpge.h"
 #include "stb_image.c"
+#include "cxxopts.h"
 
 using namespace seal;
 
@@ -25,21 +26,64 @@ void save_three_blocks_interleaved_ycc(std::ofstream &file,
 
 
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
 
     // Read encryption parameters from file
-    int WIDTH = 0, HEIGHT = 0, CHANNELS=0;
+    int WIDTH = 0, HEIGHT = 0, channels = 0;
     std::ifstream paramfile;
-    paramfile.open("../keys/params.txt");
+    paramfile.open("./keys/params.txt");
     paramfile >> WIDTH;
     paramfile >> HEIGHT;
-    paramfile >> CHANNELS;
-    // std::cout << WIDTH << " " << HEIGHT << " Channels: " << CHANNELS << std::endl;
-    assert(CHANNELS != 0);
-    assert(CHANNELS == 3);
-    assert(WIDTH != 0);
-    assert(HEIGHT != 0);
+    paramfile >> channels;
+    // std::cout << original_width << " " << original_height << std::endl;
+    assert(channels == 3);
     paramfile.close();
+    
+    std::string ctext_infile("./image/nothingpersonnel.txt");
+    std::string ctext_outfile("./image/zoop.txt");
+    bool verbose = false;
+    int n_number_coeffs = N_NUMBER_COEFFS;
+    int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
+    int n_poly_base = POLY_BASE;
+    int plain_modulus = PLAIN_MODULUS;
+    int coeff_modulus = COEFF_MODULUS;
+
+
+    try {
+        cxxopts::Options options(argv[0], "Options for Client-Side FHE");
+        options.positional_help("[optional args]").show_positional_help();
+
+        options.add_options()
+            ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
+            ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
+            ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
+            ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
+            ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
+            ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
+            ("pmod", "Plaintext modulus", cxxopts::value<int>())
+            ("base", "Polynomial base used for fractional encoding (essentially a number base)", cxxopts::value<int>())
+            ("help", "Print help");
+
+        auto result = options.parse(argc, argv);
+
+        if (result.count("help")) {
+            std::cout << options.help({"", "Group"}) << std::endl;
+            exit(0);
+        }
+
+        if (result.count("file")) ctext_infile = result["file"].as<std::string>();
+        if (result.count("outfile")) ctext_outfile = result["outfile"].as<std::string>();
+        if (result.count("ncoeff")) n_number_coeffs = result["ncoeff"].as<int>(); 
+        if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
+        if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
+        if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
+        if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
+    } 
+    catch (const cxxopts::OptionException& e) {
+        std::cout << "error parsing options: " << e.what() << std::endl;
+        exit(1);
+    }
+
 
 
     // Encryption Parameters
@@ -50,7 +94,7 @@ int main(int argc, char** argv) {
     params.set_coeff_modulus(coeff_modulus_128(COEFF_MODULUS));
     params.set_plain_modulus(PLAIN_MODULUS);
     SEALContext context(params);
-    print_parameters(context);
+    // print_parameters(context);
 
 
     // Generate keys
