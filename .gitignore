@@ -29,6 +29,6 @@ bin/*
 
 
 *.ipynb_checkpoints
-
+.vscode/
 
 
