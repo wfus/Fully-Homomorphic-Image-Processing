@@ -14,6 +14,7 @@ std::vector<double> read_image(std::string fname);
 int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
+    bool bicubic = false;
     std::string test_filename("./image/test.jpg");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");

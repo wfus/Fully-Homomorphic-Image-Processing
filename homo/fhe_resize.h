@@ -46,8 +46,8 @@ void compare_resize_opencv(const char* im_name, int new_width, int new_height, b
     Mat resized_image;
     image = imread(im_name, IMREAD_COLOR);
     Size size(new_width, new_height);
-    int inter = bicubic ? INTER_CUBIC : INTER_LINEAR;
-    resize(image, resized_image, size, 0, 0, inter);
+    auto INTERPOLATION_FLAG = bicubic ? INTER_CUBIC : INTER_LINEAR;
+    resize(image, resized_image, size, 0, 0, INTERPOLATION_FLAG);
 
     // Compare bgr_interleaved with RESIZE_PICTURE
     int running_error = 0;
