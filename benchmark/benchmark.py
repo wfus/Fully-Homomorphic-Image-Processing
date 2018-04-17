@@ -1,17 +1,17 @@
 from subprocess import call
 
 CWD = "../"
-IMAGE_NAMES = [("image/barak.jpg", 'test')]
+IMAGE_NAMES = [("image/boazbarak.jpg", 'boaz')]
 POLY_N = [1024, 2048, 4096, 8192, 16384]
 PLAIN_MOD = [12289, 40961, 114689, 319489, 786433]
 WIDTH_HEIGHT_PAIRS = [(17, 17)]
 LOG_DIR = "../logs"
 
 def log_resize(imname, inter, width, height, poly_n, plain_mod):
-    return "{}/resize_{}_{}_{}_{}_{}_{}_{}.txt".format(LOG_DIR, imname, inter, width, height, poly_n, plain_mod)
+    return "{}/resize_{}_{}_{}_{}_{}_{}.txt".format(LOG_DIR, imname, inter, width, height, poly_n, plain_mod)
 
-def log_jpeg(imname, poly_n, plain_mod, enc_base):
-    return "{}/jpg_{}_{}_{}_{}.txt".format(LOG_DIR, imname, poly_n, plain_mod)
+def log_jpeg(imname, poly_n, plain_mod):
+    return "{}/jpg_{}_{}_{}.txt".format(LOG_DIR, imname, poly_n, plain_mod)
 
 def call_resize(image, logname, outname, inter, width, height, poly_n, plain_mod):
     f = open(logname, 'w')
@@ -44,11 +44,11 @@ if __name__ == '__main__':
                 for width, height in WIDTH_HEIGHT_PAIRS:
                     for inter in ['bilinear', 'bicubic']:
                         logname = log_resize(short_name, inter, width, height, poly_n, plain_mod)
-                        outname = "image/{}_{}_{}_{}_{}_{}_{}.png".format(short_name, inter, width, height, poly_n, plain_mod)
+                        outname = "logs/{}_{}_{}_{}_{}_{}.png".format(short_name, inter, width, height, poly_n, plain_mod)
                         inter_param = '' if inter == 'bilinear' else '--bicubic'
                         call_resize(image_name, logname, outname, inter_param, width, height, poly_n, plain_mod)
                 
-                logname = log_jpeg(short_name, poly_n, plain_mod, enc_base)
-                outname = "image/new_{}_{}_{}_{}.jpg".format(short_name, poly_n, plain_mod)
+                logname = log_jpeg(short_name, poly_n, plain_mod)
+                outname = "logs/new_{}_{}_{}.jpg".format(short_name, poly_n, plain_mod)
                 call_jpeg(image_name, logname, outname, poly_n, plain_mod)
                     
