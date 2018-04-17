@@ -14,6 +14,7 @@ std::vector<double> read_image(std::string fname);
 int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
+    bool bicubic = false;
     std::string test_filename("./image/test.jpg");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
@@ -33,6 +34,7 @@ int main(int argc, const char** argv) {
         options.add_options()
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
+            ("bicubic", "Should we compare against bicubic resizing with opencv", cxxopts::value<bool>(bicubic))
             ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
             ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
@@ -230,7 +232,7 @@ int main(int argc, const char** argv) {
         // show_image_rgb(resized_width, resized_height, decrypted_image);
 
         // Calculate RMS Error
-        compare_resize_opencv(test_filename.c_str(), resized_width, resized_height, decrypted_image);
+        compare_resize_opencv(test_filename.c_str(), resized_width, resized_height, decrypted_image, bicubic);
 
         #ifdef linux
             save_image_rgb(resized_width, resized_height, decrypted_image, ctext_outfile);
