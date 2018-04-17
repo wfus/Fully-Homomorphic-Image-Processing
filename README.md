@@ -46,7 +46,7 @@ brew install opencv
 ```
 On Debian, install using apt
 ```
-sudo apt install opencv -y
+sudo apt install libopencv-dev -y
 ```
 Unfortunately, if you use brew to install opencv on MacOSX, there seems to be problems with linked ```cv::imwrite()``` because of compiler issues when building opencv using homebrew. Therefore, some parts of the code are linux only, you should see some ```#ifdef linux``` where we only save the image if running on linux. To fix this problem on an OSX machine, you'll have to install OpenCV from source from their website. 
 
