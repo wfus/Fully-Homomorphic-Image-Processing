@@ -14,10 +14,24 @@ and multiply by a [quantization](https://en.wikipedia.org/wiki/Quantization_(ima
 
 ## Installation Instructions
 
-We use Microsoft's [SEAL](https://www.microsoft.com/en-us/research/publication/simple-encrypted-arithmetic-library-seal-v2-2/) library for most of the heavy lifting for the FHE side. Since it has no public repository, version 2.3 of the library has been added as a git submodule from an unofficial source.
+We use Microsoft's [SEAL](https://www.microsoft.com/en-us/research/publication/simple-encrypted-arithmetic-library-seal-v2-2/) library for most of the heavy lifting for the FHE side. Since it has no public repository, version 2.3 of the library has been added as a git submodule from an unofficial source (me).
 
 
 We used ```g++-7``` as our default compiler for everything. If you want to change this change the ```CXX=``` portions of the makefile and the install script. The install script ```install.sh``` should update the git submodule containing SEAL and build it automatically. Then, you should be able to make our example programs in ```homo/```.
+
+
+After using ```install.sh``` and installing the SEAL library as a submodule, you can build using CMake directly with 
+```
+mkdir build && cd build
+cmake ..
+make
+```
+We also have a Makefile in the base directory that builds everything. From the root directory, to build everything with the default options we used, simply use 
+```
+make
+```
+
+
 
 ### Dependencies
 You will also need opencv installed as a library. for Mac OSX, install opencv via brew:
