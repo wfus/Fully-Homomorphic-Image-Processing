@@ -14,13 +14,13 @@ def log_resize(imname, width, height, pcoeff, fcoeff, pmod):
 def log_jpeg(imname, pcoeff, fcoeff, pmod):
     return "{}/jpg_{}_{}_{}_{}.txt".format(LOG_DIR, imname, pcoeff, fcoeff, pmod)
 
-def call_resize(image, width, height, logname, outname):
+def call_resize(image, width, height, logname, outname, inter):
     f = open(logname, 'w')
     print("Resize Client (Sending)")
     call(['./bin/client_resize', '--width', str(width), '--height', str(height), '--send', '-f', image], 
           cwd=CWD, stdout=f)
     print("Resize Server")
-    call(['./bin/server_resize', '--width', str(width), '--height', str(height)], 
+    call(['./bin/server_resize', '--width', str(width), '--height', str(height), inter], 
           cwd=CWD, stdout=f)
     print("Resize Client (Recieving)")
     call(['./bin/client_resize', '--width', str(width), '--height', str(height), '--recieve', '-o', outname], 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         for width, height in WIDTH_HEIGHT_PAIRS:
             logname = log_resize(short_name, width, height, 0, 0, 0)
             outname = "image/{}_{}_{}.png".format(short_name, width, height)
-            call_resize(image_name, width, height, logname, outname)
+            call_resize(image_name, width, height, logname, outname, '--bicubic')
         
         logname = log_jpeg(short_name, 0, 0, 0)
         outname = "image/new_{}.jpg".format(short_name)
