@@ -170,8 +170,8 @@ inline void Cubic(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &
 
     d = B;
 
-    Ciphertext t2(t); evaluator.multiply(t2, t);
-    Ciphertext t3(t2); evaluator.multiply(t3, t);
+    Ciphertext t2(t); evaluator.square(t2);
+    Ciphertext t3(t); evaluator.multiply(t3, t);
 
     evaluator.multiply(a, t3);
     evaluator.multiply(b, t2);
