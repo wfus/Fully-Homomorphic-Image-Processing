@@ -1,7 +1,6 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
 #include "fhe_resize.h"
-#include "stb_image.c"
 #include "cxxopts.h"
 
 using namespace seal;
@@ -94,7 +93,7 @@ int main(int argc, const char** argv) {
         int width = 0, height = 0, actual_composition = 0;
         uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
         // The image will be interleaved r g b r g b ...
-        std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
+        // std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
         int channels = requested_composition;
         // std::vector<uint8_t> original_image;
         // for (int i = 0; i < width * height * channels; i++) {
@@ -104,11 +103,13 @@ int main(int argc, const char** argv) {
 
         // Encryption Parameters
         EncryptionParameters params;
-        params.set_poly_modulus("1x^8192 + 1");
+        char poly_mod[16];
+        snprintf(poly_mod, 16, "1x^%i + 1", coeff_modulus);
+        params.set_poly_modulus(poly_mod);
         params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
         params.set_plain_modulus(plain_modulus);
         SEALContext context(params);
-        print_parameters(context);
+        // print_parameters(context);
 
         std::ofstream paramfile; 
         paramfile.open("./keys/params.txt");
@@ -123,13 +124,13 @@ int main(int argc, const char** argv) {
         std::ofstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        start = std::chrono::steady_clock::now(); 
+        // start = std::chrono::steady_clock::now(); 
         KeyGenerator keygen(context);
         auto public_key = keygen.public_key();
         auto secret_key = keygen.secret_key();
         public_key.save(pkfile);
         secret_key.save(skfile);
-        diff = std::chrono::steady_clock::now() - start; 
+        // diff = std::chrono::steady_clock::now() - start; 
         // std::cout << "KeyGen: ";
         // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
@@ -143,7 +144,7 @@ int main(int argc, const char** argv) {
         // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)
         // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
-        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), N_NUMBER_COEFFS, N_FRACTIONAL_COEFFS, POLY_BASE);
+        FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
         // Write to ciphertext as RGBRGBRGBRGB row by row. 
         std::ofstream myfile;
@@ -151,6 +152,7 @@ int main(int argc, const char** argv) {
         // std::cout << width << " " << height << std::endl;
        
         Ciphertext c;
+        std::cout << "Encryption,";
         for (int i = 0; i < width * height * channels; i++) {
             start = std::chrono::steady_clock::now(); 
             encryptor.encrypt(encoder.encode(image_data[i]), c);
@@ -174,23 +176,25 @@ int main(int argc, const char** argv) {
         // Encryption Parameters
         EncryptionParameters params;
 
-        params.set_poly_modulus("1x^8192 + 1");
+        char poly_mod[16];
+        snprintf(poly_mod, 16, "1x^%i + 1", coeff_modulus);
+        params.set_poly_modulus(poly_mod);
         params.set_coeff_modulus(coeff_modulus_128(coeff_modulus));
         params.set_plain_modulus(plain_modulus);
         SEALContext context(params);
-        print_parameters(context);
+        // print_parameters(context);
 
 
         // Get keys
         std::ifstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        start = std::chrono::steady_clock::now(); 
+        // start = std::chrono::steady_clock::now(); 
         PublicKey public_key;
         SecretKey secret_key;
         public_key.load(pkfile);
         secret_key.load(skfile);
-        diff = std::chrono::steady_clock::now() - start; 
+        // diff = std::chrono::steady_clock::now() - start; 
         // std::cout << "Key Load Time: ";
         // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
@@ -209,6 +213,7 @@ int main(int argc, const char** argv) {
         std::vector<uint8_t> decrypted_image;
         Plaintext p;
         Ciphertext c;
+        std::cout << "Decryption,";
         for (int i = 0; i < resized_width * resized_height * 3; i++) {
             c.load(instream);
             start = std::chrono::steady_clock::now(); 
