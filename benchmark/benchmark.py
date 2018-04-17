@@ -1,7 +1,7 @@
 from subprocess import call
 
 CWD = "../"
-IMAGE_NAMES = [("image/barak.jpg", 'test')]
+IMAGE_NAMES = [("image/boazbarak.jpg", 'boaz')]
 POLY_N = [1024, 2048, 4096, 8192, 16384]
 PLAIN_MOD = [12289, 40961, 114689, 319489, 786433]
 WIDTH_HEIGHT_PAIRS = [(17, 17)]
