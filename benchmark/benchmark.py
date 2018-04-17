@@ -10,7 +10,7 @@ LOG_DIR = "../logs"
 def log_resize(imname, inter, width, height, poly_n, plain_mod):
     return "{}/resize_{}_{}_{}_{}_{}_{}.txt".format(LOG_DIR, imname, inter, width, height, poly_n, plain_mod)
 
-def log_jpeg(imname, poly_n, plain_mod, enc_base):
+def log_jpeg(imname, poly_n, plain_mod):
     return "{}/jpg_{}_{}_{}.txt".format(LOG_DIR, imname, poly_n, plain_mod)
 
 def call_resize(image, logname, outname, inter, width, height, poly_n, plain_mod):
