@@ -228,14 +228,13 @@ int main(int argc, const char** argv) {
         instream.close();
         std::cout << std::endl;
 
-        // Display our decrypted image!
-        // show_image_rgb(resized_width, resized_height, decrypted_image);
-
         // Calculate RMS Error
         compare_resize_opencv(test_filename.c_str(), resized_width, resized_height, bicubic, decrypted_image);
 
         #ifdef linux
             save_image_rgb(resized_width, resized_height, decrypted_image, ctext_outfile);
+        #else
+            show_image_rgb(resized_width, resized_height, decrypted_image);
         #endif
     }
     return 0;

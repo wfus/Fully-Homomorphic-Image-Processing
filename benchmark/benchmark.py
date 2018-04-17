@@ -22,7 +22,7 @@ def call_resize(image, logname, outname, inter, width, height, poly_n, plain_mod
     call(['./bin/server_resize', '--width', str(width), '--height', str(height), inter, '--cmod', str(poly_n), '--pmod', str(plain_mod)], 
           cwd=CWD, stdout=f)
     print("Resize Client (Recieving)")
-    call(['./bin/client_resize', '--width', str(width), '--height', str(height), '--recieve', '-o', outname, '--cmod', str(poly_n), '--pmod', str(plain_mod)], 
+    call(['./bin/client_resize', '--width', str(width), '--height', str(height), '--recieve', '-f', image, '-o', outname, '--cmod', str(poly_n), '--pmod', str(plain_mod)], 
           cwd=CWD, stdout=f)
 
 def call_jpeg(image, logname, outname, poly_n, plain_mod):
@@ -34,7 +34,7 @@ def call_jpeg(image, logname, outname, poly_n, plain_mod):
     call(['./bin/server_jpeg', '--cmod', str(poly_n), '--pmod', str(plain_mod)], 
           cwd=CWD, stdout=f)
     print("JPG Client (Recieving)")
-    call(['./bin/client_jpeg', '--recieve', '-o', outname, '--cmod', str(poly_n), '--pmod', str(plain_mod)],  
+    call(['./bin/client_jpeg', '--recieve', '-f', image, '-o', outname, '--cmod', str(poly_n), '--pmod', str(plain_mod)],  
           cwd=CWD, stdout=f)
 
 if __name__ == '__main__':
