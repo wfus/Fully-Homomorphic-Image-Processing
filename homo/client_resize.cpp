@@ -18,7 +18,6 @@ int main(int argc, const char** argv) {
     std::string test_filename("./image/test.jpg");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
-    bool bicubic = false;
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
