@@ -32,8 +32,8 @@ void resize_image_opencv(const char* im_name, int new_width, int new_height) {
 }
 
 
-void compare_resize_opencv(const char* im_name, int new_width, int new_height,
-                           std::vector<uint8_t> &interleaved, bool bicubic) {
+void compare_resize_opencv(const char* im_name, int new_width, int new_height, bool bicubic,
+                           std::vector<uint8_t> &interleaved) {
     // Convert interleaved to BGR to be the same as OPENCV, rip
 
     std::vector<uint8_t> bgr_interleaved;
