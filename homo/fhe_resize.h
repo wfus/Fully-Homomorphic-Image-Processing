@@ -33,7 +33,7 @@ void resize_image_opencv(const char* im_name, int new_width, int new_height) {
 
 
 void compare_resize_opencv(const char* im_name, int new_width, int new_height,
-                           std::vector<uint8_t> &interleaved) {
+                           std::vector<uint8_t> &interleaved, bool bicubic) {
     // Convert interleaved to BGR to be the same as OPENCV, rip
 
     std::vector<uint8_t> bgr_interleaved;
@@ -46,7 +46,8 @@ void compare_resize_opencv(const char* im_name, int new_width, int new_height,
     Mat resized_image;
     image = imread(im_name, IMREAD_COLOR);
     Size size(new_width, new_height);
-    resize(image, resized_image, size, 0, 0, INTER_LINEAR);
+    auto INTERPOLATION_FLAG = bicubic ? INTER_CUBIC : INTER_LINEAR;
+    resize(image, resized_image, size, 0, 0, INTERPOLATION_FLAG);
 
     // Compare bgr_interleaved with RESIZE_PICTURE
     int running_error = 0;
