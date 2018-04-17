@@ -46,11 +46,11 @@ if __name__ == '__main__':
                     for width, height in WIDTH_HEIGHT_PAIRS:
                         for inter in ['bilinear', 'bicubic']:
                             logname = log_resize(short_name, inter, width, height, poly_n, plain_mod, enc_base)
-                            outname = "image/{}_{}_{}_{}.png".format(short_name, inter, width, height)
-                            inter_param = '' if inter == 'bicubic' else '--bicubic'
+                            outname = "image/{}_{}_{}_{}_{}_{}_{}.png".format(short_name, inter, width, height, poly_n, plain_mod, enc_base)
+                            inter_param = '' if inter == 'bilinear' else '--bicubic'
                             call_resize(image_name, logname, outname, inter_param, width, height, poly_n, plain_mod, enc_base)
                     
-                    logname = log_jpeg(short_name, 0, 0, 0)
-                    outname = "image/new_{}.jpg".format(short_name)
+                    logname = log_jpeg(short_name, poly_n, plain_mod, enc_base)
+                    outname = "image/new_{}_{}_{}_{}.jpg".format(short_name, poly_n, plain_mod, enc_base)
                     call_jpeg(image_name, logname, outname, poly_n, plain_mod, enc_base)
                     
