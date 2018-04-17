@@ -19,9 +19,9 @@ using namespace seal;
 
 
 // Encrytion params
-const int POLY_BASE = 3;
-const int N_FRACTIONAL_COEFFS = 20;  
-const int N_NUMBER_COEFFS = 20;
+const int POLY_BASE = 2;
+const int N_FRACTIONAL_COEFFS = 100;  
+const int N_NUMBER_COEFFS = 100;
 
 const int PLAIN_MODULUS = 1 << 14;
 const int COEFF_MODULUS = 8192;
