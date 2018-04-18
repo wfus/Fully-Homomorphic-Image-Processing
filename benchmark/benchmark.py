@@ -2,8 +2,8 @@ from subprocess import call
 
 CWD = "../"
 IMAGE_NAMES = [("image/boazbarak.jpg", 'boaz')]
-POLY_N = [1024, 2048, 4096, 8192, 16384]
-PLAIN_MOD = [12289, 40961, 114689, 319489, 786433]
+POLY_N = [2048, 4096, 8192, 16384]
+PLAIN_MOD = [11, 31, 101, 307, 1009, 3001, 10007, 30011, 100003]
 WIDTH_HEIGHT_PAIRS = [(17, 17)]
 LOG_DIR = "../logs"
 
