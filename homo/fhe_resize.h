@@ -322,6 +322,7 @@ void ResizeImage (String infile_str, int original_width, int original_height,
     srcImage.pixels = src_cpixels;
     
     int init_rows = 0;
+    Ciphertext c;
     if (inter == BILINEAR) {
         init_rows = 2;
     } else if (inter == BICUBIC) {
@@ -330,7 +331,6 @@ void ResizeImage (String infile_str, int original_width, int original_height,
     int read = 0;
     for (int i = 0; i < original_width * init_rows; i++) {
         std::vector<Ciphertext> pixel;
-        Ciphertext c; 
         c.load(infile);
         pixel.push_back(c);
         c.load(infile);
@@ -348,10 +348,14 @@ void ResizeImage (String infile_str, int original_width, int original_height,
     destImage.pixels = dest_cpixels;
     
     for (int y = 0; y < destImage.height; ++y){
-        // std::cout << std::endl << "Row " << y << std::endl;
         float v = float(y) / float(destImage.height - 1) * float(srcImage.height) - 0.5;
         int new_start = min(int(v) - init_rows / 2 + 1, srcImage.height - init_rows) * srcImage.width; 
         if (new_start > srcImage.start) { 
+            for (int i = srcImage.start + init_rows * srcImage.width; i < new_start; i++) {
+                for (int j = 0; j < 3; j++) {
+                    c.load(infile);
+                }
+            }
 
             std::vector<std::vector<Ciphertext>> new_pixels;
             int present = 0;
@@ -361,7 +365,6 @@ void ResizeImage (String infile_str, int original_width, int original_height,
             }
             for (int i = present; i < init_rows * srcImage.width; i++) {
                 std::vector<Ciphertext> pixel;
-                Ciphertext c; 
                 c.load(infile);
                 pixel.push_back(c);
                 c.load(infile);

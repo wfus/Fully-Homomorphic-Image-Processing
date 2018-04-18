@@ -512,6 +512,7 @@ void compare_jpeg_jojpeg(const char* original_image, const char* output_image, c
     uint8_t *jo_data = stbi_load(jo_image, &width, &height, &composition, 3);
     int running_error = 0;
     for (int i = 0; i < width * height * composition; i++) {
+        std::cout << jo_data[i] << '\t' << output_data[i] << std::endl;
         running_error += (output_data[i] - jo_data[i]) * (output_data[i] - jo_data[i]);
     }
     double average_error = ((double) running_error) / (width * height * composition);
