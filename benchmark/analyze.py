@@ -1,5 +1,6 @@
 import glob
 import os
+import numpy as np
 from functools import reduce
 
 LOG_DIR = "../logs"
@@ -22,6 +23,5 @@ if __name__ == '__main__':
                 all_data[data[0]] = data[1:]
             # print(all_data[data[0]])
         for key in all_data:
-            val = list(map(lambda x: float(x), all_data[key]))
-            avg = reduce(lambda x, y: x + y, val) / len(val)
-            print(key + ',' + str(avg))
+            val = np.array(list(map(lambda x: float(x), all_data[key])))
+            print(key + ',' + str(np.mean(val)) + ',' + str(np.std(val)))
