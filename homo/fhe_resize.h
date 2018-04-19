@@ -204,6 +204,23 @@ inline void Linear(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext 
     return;
 }
 
+
+inline void Linear_Parallelize(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &t,
+                   Evaluator &evaluator, 
+                   FractionalEncoder &encoder, 
+                   Encryptor &encryptor) {
+    auto start = std::chrono::steady_clock::now();
+    Ciphertext boaz1(t); evaluator.negate(boaz1); evaluator.add_plain(boaz1, encoder.encode(1.0)); 
+    evaluator.multiply(boaz1, A); 
+    Ciphertext boaz2(B); evaluator.multiply(boaz2, t); 
+    evaluator.add(boaz1, boaz2); 
+    result = boaz1;
+    auto diff = std::chrono::steady_clock::now() - start;
+    std::cout << chrono::duration<double, milli>(diff).count() << ',';
+    return;
+}
+
+
 struct SImageData
 {
     int width;
