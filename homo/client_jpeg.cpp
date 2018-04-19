@@ -122,6 +122,17 @@ int main(int argc, const char** argv) {
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
+
+        // Check if our parameters are able to PARALLELIZE
+        auto qualifiers = context.qualifiers();
+        std::cout << "IS BATCHING ENABLED: Y/N " << qualifiers.enable_batching << std::endl; 
+
+        // Make a PolyCRT builder clas for the encoding, uses CRT to batch
+        PolyCRTBuilder crtbuilder(context);
+        int slot_count = crtbuilder.slot_count();
+        int row_size = slot_count /2;
+        std::cout << "Row size: " << row_size << std::endl;
+
         // Write the ciphertext to file block by block - since most times
         // ciphertext doesn't fit directly in RAM
         // Write RED 8x8 BLOCK, GREEN 8x8 BLOCK, then BLUE 8x8 BLOCK
