@@ -1,4 +1,5 @@
 from subprocess import call
+import os
 
 CWD = "../"
 IMAGE_NAMES = [("image/boazbarak.jpg", 'boaz')]
@@ -38,6 +39,7 @@ def call_jpeg(image, logname, outname, poly_n, plain_mod):
           cwd=CWD, stdout=f)
 
 if __name__ == '__main__':
+    os.system('mkdir -p logs')
     for image_name, short_name in IMAGE_NAMES:
         for poly_n in POLY_N:
             for plain_mod in PLAIN_MOD:
@@ -48,7 +50,7 @@ if __name__ == '__main__':
                         inter_param = '' if inter == 'bilinear' else '--bicubic'
                         call_resize(image_name, logname, outname, inter_param, width, height, poly_n, plain_mod)
                 
-                logname = log_jpeg(short_name, poly_n, plain_mod)
-                outname = "logs/new_{}_{}_{}.jpg".format(short_name, poly_n, plain_mod)
-                call_jpeg(image_name, logname, outname, poly_n, plain_mod)
+                # logname = log_jpeg(short_name, poly_n, plain_mod)
+                # outname = "logs/new_{}_{}_{}.jpg".format(short_name, poly_n, plain_mod)
+                # call_jpeg(image_name, logname, outname, poly_n, plain_mod)
                     
