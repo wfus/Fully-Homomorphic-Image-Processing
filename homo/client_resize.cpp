@@ -23,6 +23,7 @@ int main(int argc, const char** argv) {
     int n_poly_base = POLY_BASE;
     int plain_modulus = PLAIN_MODULUS;
     int coeff_modulus = COEFF_MODULUS;
+    int dbc = DBC;
     int resized_width = 0;
     int resized_height = 0;
     bool verbose = false;
@@ -43,6 +44,7 @@ int main(int argc, const char** argv) {
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
             ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
             ("pmod", "Plaintext modulus", cxxopts::value<int>())
+            ("dbc", "Decomposition bit count", cxxopts::value<int>())
             ("width", "width of resized image", cxxopts::value<int>())
             ("height", "height of resized image", cxxopts::value<int>())
             ("base", "Polynomial base used for fractional encoding (essentially a number base)", cxxopts::value<int>())
@@ -66,7 +68,8 @@ int main(int argc, const char** argv) {
         if (result.count("ncoeff")) n_number_coeffs = result["ncoeff"].as<int>(); 
         if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
         if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
-        if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
+        if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>();
+        if (result.count("dbc")) dbc = result["dbc"].as<int>();  
         if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
         
         
@@ -121,19 +124,23 @@ int main(int argc, const char** argv) {
 
         // Generate keys
         // and save them to file
-        std::ofstream pkfile, skfile;
+        std::ofstream pkfile, skfile, ekfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
+        ekfile.open("./keys/evalkey.txt");
         // start = std::chrono::steady_clock::now(); 
         KeyGenerator keygen(context);
         auto public_key = keygen.public_key();
         auto secret_key = keygen.secret_key();
+        EvaluationKeys ev_key;
+        keygen.generate_evaluation_keys(dbc, ev_key);
         public_key.save(pkfile);
         secret_key.save(skfile);
+        ev_key.save(ekfile);
         // diff = std::chrono::steady_clock::now() - start; 
         // std::cout << "KeyGen: ";
         // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-        pkfile.close(); skfile.close();    
+        pkfile.close(); skfile.close(); ekfile.close();
 
 
         // Encrytor and decryptor setup
