@@ -50,3 +50,7 @@ target_link_libraries(decode_server seal ${OpenCV_LIBS})
 # Image testing, debugging only
 add_executable(image_test homo/image_test.cpp ${LIBRARY_SOURCES})
 target_link_libraries(image_test seal ${OpenCV_LIBS})
+
+# Parameter testing, debugging only
+add_executable(param homo/parameters.cpp ${LIBRARY_SOURCES})
+target_link_libraries(param seal ${OpenCV_LIBS})
