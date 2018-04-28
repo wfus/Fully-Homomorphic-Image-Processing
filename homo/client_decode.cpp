@@ -26,6 +26,8 @@ int main(int argc, const char** argv) {
     int resized_width = 0;
     int resized_height = 0;
     bool verbose = false;
+    int width = 8;
+    int height = 8;
 
      try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
@@ -74,9 +76,6 @@ int main(int argc, const char** argv) {
     }
 
     if (sending) {
-        const int requested_composition = 1;
-        int width = 0, height = 0, actual_composition = 0;
-        uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
         // Encryption Parameters
         EncryptionParameters params;
         char poly_mod[16];
@@ -87,11 +86,9 @@ int main(int argc, const char** argv) {
         SEALContext context(params);
         // print_parameters(context);
 
+
         std::ofstream paramfile; 
         paramfile.open("./keys/params.txt");
-        paramfile << width << " ";
-        paramfile << height << " ";
-        paramfile << actual_composition << " ";
         paramfile << plain_modulus << " ";
         
 
@@ -126,47 +123,44 @@ int main(int argc, const char** argv) {
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
-        std::vector<double> red, green, blue; 
-        
-        for (int i = 0; i < width * height * actual_composition; i+=3) {
-            red.push_back((double) image_data[i]);
-            green.push_back((double) image_data[i+1]);
-            blue.push_back((double) image_data[i+2]);
-        }
-        std::vector<std::vector<std::vector<double>>> blocks;
-        blocks.push_back(split_image_eight_block(red, width, height));
-        blocks.push_back(split_image_eight_block(green, width, height));
-        blocks.push_back(split_image_eight_block(blue, width, height));
+    
+        std::ifstream infile;
+        infile.open(test_filename.c_str());
+        int image_data[3 * width * height];
+        char comma;
+        for (int i = 0; i < 3 * width * height; i++) {
+            infile >> image_data[i] >> comma; 
 
+        }
         std::ofstream myfile;
         myfile.open(ctext_outfile.c_str());
-        start = std::chrono::steady_clock::now(); 
         Ciphertext c;
-        double curr;
-        int count;
-        int pairs;
-        curr = image_data[0];
-        count = 1;
-        pairs = 1;
-        for (int i = 1; i < width * height; i++) {
-            if (image_data[i] == curr) {
-                count++;
-            } else {
-                encryptor.encrypt(encoder.encode(curr), c);
-                c.save(myfile);
-                encryptor.encrypt(encoder.encode(count), c);
-                c.save(myfile);
-                curr = image_data[i];
-                count = 1;
-                pairs++;
+        int curr, count, index, pairs;
+        for (int i = 0; i < 3; i++) {
+            curr = image_data[i];
+            count = 1;
+            pairs = 1;
+            for (int j = 1; j < width * height; j++) {
+                index = 3 * j + i;
+                if (image_data[index] == curr) {
+                    count++;
+                } else {
+                    encryptor.encrypt(encoder.encode(curr), c);
+                    c.save(myfile);
+                    encryptor.encrypt(encoder.encode(count), c);
+                    c.save(myfile);
+                    curr = image_data[index];
+                    count = 1;
+                    pairs++;
+                }
             }
+            encryptor.encrypt(encoder.encode(curr), c);
+            c.save(myfile);
+            encryptor.encrypt(encoder.encode(count), c);
+            c.save(myfile);
+            paramfile << pairs << " ";
         }
-        encryptor.encrypt(encoder.encode(curr), c);
-        c.save(myfile);
-        encryptor.encrypt(encoder.encode(count), c);
-        c.save(myfile);
-        paramfile << pairs << std::endl;
-
+        paramfile << std::endl;
         
        
         // std::cout << width << " " << height << std::endl;
