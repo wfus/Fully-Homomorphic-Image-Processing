@@ -1,7 +1,6 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
-#include "fhe_resize.h"
-#include "jpge.h"
+// #include "fhe_decode.h"
 #include "cxxopts.h"
 
 using namespace seal;
@@ -42,7 +41,6 @@ int main(int argc, const char** argv) {
 
         options.add_options()
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
-            ("bicubic", "Use bicubic interpolation instead of linear", cxxopts::value<bool>(bicubic))
             ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
             ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
             ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
@@ -128,31 +126,6 @@ int main(int argc, const char** argv) {
     std::ofstream outfile;
     outfile.open(ctext_outfile.c_str()); 
     
-    String op = bicubic ? "Cubic," : "Linear,";
-    std::cout << op;
-    int INTER_TYPE = bicubic ? BICUBIC : BILINEAR;
-    SImageData resize_im;
-    ResizeImage(
-        ctext_infile,
-        original_width,
-        original_height,
-        resize_im,
-        resized_width,
-        resized_height,
-        INTER_TYPE,
-        evaluator,
-        encoder,
-        encryptor,
-        ev_key
-    );
-    std::cout << std::endl;
-
-    for (int i = 0; i < resize_im.pixels.size(); i++) {
-        for (int j = 0; j < 3; j++) {
-            Ciphertext c = resize_im.pixels[i][j];
-            c.save(outfile);
-        }
-    }
     outfile.close();
     return 0;
 }
