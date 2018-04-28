@@ -99,18 +99,21 @@ int main(int argc, const char** argv) {
 
 
     // Generate keys
-    std::ifstream pkfile, skfile;
+    std::ifstream pkfile, skfile, ekfile;
     pkfile.open("./keys/pubkey.txt");
     skfile.open("./keys/seckey.txt");
-    start = std::chrono::steady_clock::now(); 
+    ekfile.open("./keys/evalkey.txt");
+    // start = std::chrono::steady_clock::now(); 
     PublicKey public_key;
     SecretKey secret_key;
+    EvaluationKeys ev_key;
     public_key.load(pkfile);
     secret_key.load(skfile);
-    diff = std::chrono::steady_clock::now() - start; 
+    ev_key.load(ekfile);
+    // diff = std::chrono::steady_clock::now() - start; 
     // std::cout << "Key Load Time: ";
     // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-    pkfile.close(); skfile.close();    
+    pkfile.close(); skfile.close(); ekfile.close();   
 
 
     // Encrytor and decryptor setup
@@ -139,7 +142,8 @@ int main(int argc, const char** argv) {
         INTER_TYPE,
         evaluator,
         encoder,
-        encryptor
+        encryptor,
+        ev_key
     );
     std::cout << std::endl;
 
