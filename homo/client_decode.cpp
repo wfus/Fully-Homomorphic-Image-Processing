@@ -1,6 +1,6 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
-#include "fhe_resize.h"
+// #include "fhe_decode.h"
 #include "cxxopts.h"
 
 using namespace seal;
@@ -9,15 +9,14 @@ auto start = std::chrono::steady_clock::now();
 auto diff = std::chrono::steady_clock::now() - start; 
 const bool VERBOSE = true;
 
-std::vector<double> read_image(std::string fname);
-
 int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
     bool bicubic = false;
-    std::string test_filename("./image/test.txt");
+    std::string test_filename("./image/barak.jpg");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
+    std::string test_output("./image/test_out.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
@@ -28,25 +27,22 @@ int main(int argc, const char** argv) {
     int resized_height = 0;
     bool verbose = false;
 
-    try {
+     try {
         cxxopts::Options options(argv[0], "Options for Client-Side FHE");
         options.positional_help("[optional args]").show_positional_help();
 
         options.add_options()
             ("r,recieve", "Is the client currently decrypting results", cxxopts::value<bool>(recieving))
             ("s,send", "Is the client currently encrypting raw image", cxxopts::value<bool>(sending))
-            ("bicubic", "Use bicubic interpolation instead of linear", cxxopts::value<bool>(bicubic))
             ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
-            ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
-            ("c,cfile", "Filename for ciphertext result file to be checked for correctness", cxxopts::value<std::string>())
+            ("c,coutfile", "Filename for ciphertext to be saved to", cxxopts::value<std::string>())
+            ("i,cinfile", "Filename for ciphertext to be received", cxxopts::value<std::string>())
+            ("o,outfile", "Filename for result image", cxxopts::value<std::string>())
             ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
             ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
             ("pmod", "Plaintext modulus", cxxopts::value<int>())
-            ("dbc", "Decomposition bit count", cxxopts::value<int>())
-            ("width", "width of resized image", cxxopts::value<int>())
-            ("height", "height of resized image", cxxopts::value<int>())
             ("base", "Polynomial base used for fractional encoding (essentially a number base)", cxxopts::value<int>())
             ("help", "Print help");
 
@@ -63,28 +59,14 @@ int main(int argc, const char** argv) {
             exit(0);
         }
         if (result.count("file")) test_filename = result["file"].as<std::string>();
-        if (result.count("outfile")) ctext_outfile = result["outfile"].as<std::string>();
-        if (result.count("cfile")) ctext_infile = result["cfile"].as<std::string>();
+        if (result.count("coutfile")) ctext_outfile = result["coutfile"].as<std::string>();
+        if (result.count("cinfile")) ctext_infile = result["cinfile"].as<std::string>();
+        if (result.count("outfile")) test_output = result["outfile"].as<std::string>();
         if (result.count("ncoeff")) n_number_coeffs = result["ncoeff"].as<int>(); 
         if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
         if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
-        if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>();
-        if (result.count("dbc")) dbc = result["dbc"].as<int>();  
+        if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
         if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
-        
-        
-        if (result.count("width")) { 
-            resized_width = result["width"].as<int>(); 
-        } else {
-            std::cout << "Please enter the width/height of the resized image..." << std::endl;
-            std::cout << "\t Use --help to see the options." << std::endl;
-        }
-        if (result.count("height")) { 
-            resized_height = result["height"].as<int>(); 
-        } else {
-            std::cout << "Please enter the width/height of the resized image..." << std::endl;
-            std::cout << "\t Use --help to see the options." << std::endl;
-        }
     } 
     catch (const cxxopts::OptionException& e) {
         std::cout << "error parsing options: " << e.what() << std::endl;
@@ -92,7 +74,9 @@ int main(int argc, const char** argv) {
     }
 
     if (sending) {
-
+        const int requested_composition = 1;
+        int width = 0, height = 0, actual_composition = 0;
+        uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
         // Encryption Parameters
         EncryptionParameters params;
         char poly_mod[16];
@@ -108,8 +92,8 @@ int main(int argc, const char** argv) {
         paramfile << width << " ";
         paramfile << height << " ";
         paramfile << actual_composition << " ";
-        paramfile << plain_modulus << std::endl;
-        paramfile.close();
+        paramfile << plain_modulus << " ";
+        
 
         // Generate keys
         // and save them to file
@@ -142,26 +126,55 @@ int main(int argc, const char** argv) {
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
-        // Write to ciphertext as RGBRGBRGBRGB row by row. 
+        std::vector<double> red, green, blue; 
+        
+        for (int i = 0; i < width * height * actual_composition; i+=3) {
+            red.push_back((double) image_data[i]);
+            green.push_back((double) image_data[i+1]);
+            blue.push_back((double) image_data[i+2]);
+        }
+        std::vector<std::vector<std::vector<double>>> blocks;
+        blocks.push_back(split_image_eight_block(red, width, height));
+        blocks.push_back(split_image_eight_block(green, width, height));
+        blocks.push_back(split_image_eight_block(blue, width, height));
+
         std::ofstream myfile;
         myfile.open(ctext_outfile.c_str());
-        // std::cout << width << " " << height << std::endl;
-       
+        start = std::chrono::steady_clock::now(); 
         Ciphertext c;
-        std::cout << "Encryption,";
-        for (int i = 0; i < width * height * channels; i++) {
-            start = std::chrono::steady_clock::now(); 
-            encryptor.encrypt(encoder.encode(image_data[i]), c);
-            diff = std::chrono::steady_clock::now() - start; 
-            std::cout << chrono::duration<double, milli>(diff).count() << ',';
-            c.save(myfile); 
-            
+        double curr;
+        int count;
+        int pairs;
+        curr = image_data[0];
+        count = 1;
+        pairs = 1;
+        for (int i = 1; i < width * height; i++) {
+            if (image_data[i] == curr) {
+                count++;
+            } else {
+                encryptor.encrypt(encoder.encode(curr), c);
+                c.save(myfile);
+                encryptor.encrypt(encoder.encode(count), c);
+                c.save(myfile);
+                curr = image_data[i];
+                count = 1;
+                pairs++;
+            }
         }
-        std::cout << std::endl;
-        // std::cout << "EncryptWrite: ";
-        // std::cout << chrono::duration<double, milli>(diff).count() << std::endl;
-        // std::cout << "EncryptWritePerPixel: " << chrono::duration<double, milli>(diff).count()/(width*height) << std::endl;
+        encryptor.encrypt(encoder.encode(curr), c);
+        c.save(myfile);
+        encryptor.encrypt(encoder.encode(count), c);
+        c.save(myfile);
+        paramfile << pairs << std::endl;
+
+        
+       
+        // std::cout << width << " " << height << std::endl;
+
+       
+        paramfile.close();
         myfile.close();
+
     }
 
     /******************************************************************************
@@ -206,32 +219,7 @@ int main(int argc, const char** argv) {
         std::ifstream instream;
         // std::cout << "Loading Ciphertexts now..." << std::endl; 
         instream.open(ctext_infile.c_str());
-        std::vector<uint8_t> decrypted_image;
-        Plaintext p;
-        Ciphertext c;
-        std::cout << "Decryption,";
-        for (int i = 0; i < resized_width * resized_height * 3; i++) {
-            c.load(instream);
-            start = std::chrono::steady_clock::now(); 
-            decryptor.decrypt(c, p);
-            diff = std::chrono::steady_clock::now() - start; 
-            std::cout << chrono::duration<double, milli>(diff).count() << ',';
-            // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-            uint8_t pixel = (uint8_t) encoder.decode(p);
-            CLAMP(pixel, 0, 255)
-            decrypted_image.push_back(pixel);
-        }
         instream.close();
-        std::cout << std::endl;
-
-        // Calculate RMS Error
-        compare_resize_opencv(test_filename.c_str(), resized_width, resized_height, bicubic, decrypted_image);
-
-        #ifdef linux
-            save_image_rgb(resized_width, resized_height, decrypted_image, ctext_outfile);
-        #else
-            show_image_rgb(resized_width, resized_height, decrypted_image);
-        #endif
     }
     return 0;
 }
