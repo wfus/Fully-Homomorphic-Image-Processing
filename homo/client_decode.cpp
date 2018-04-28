@@ -15,7 +15,7 @@ int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
     bool bicubic = false;
-    std::string test_filename("./image/test.jpg");
+    std::string test_filename("./image/test.txt");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
     int n_number_coeffs = N_NUMBER_COEFFS;
@@ -92,17 +92,6 @@ int main(int argc, const char** argv) {
     }
 
     if (sending) {
-        const int requested_composition = 3;
-        int width = 0, height = 0, actual_composition = 0;
-        uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
-        // The image will be interleaved r g b r g b ...
-        // std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
-        int channels = requested_composition;
-        // std::vector<uint8_t> original_image;
-        // for (int i = 0; i < width * height * channels; i++) {
-        //     original_image.push_back(image_data[i]);
-        // }
-        // show_image_rgb(width, height, original_image);
 
         // Encryption Parameters
         EncryptionParameters params;
