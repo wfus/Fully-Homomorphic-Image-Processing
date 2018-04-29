@@ -125,11 +125,11 @@ int main(int argc, const char** argv) {
             std::vector<Ciphertext> run;
             elem.load(myfile);
             count.load(myfile);
-            approximated_step(elem, index, count, run);
-            evaluator.add(index, count);
+            approximated_step(elem, index, count, 12, run, evaluator, encoder, encryptor);
             for (int k = 0; k < res.size(); k++) {
                 evaluator.add(res[i], run[i]);
             }
+            evaluator.add(index, count);
         }
         for (int j = 0; j < width * height; j++) {
             res[j].save(outfile);

@@ -16,8 +16,41 @@ using namespace seal;
 using namespace cv;
 
 
-void approximated_step(Ciphertext &amplitude, Ciphertext &b1, Ciphertext &b2, std::vector<Ciphertext> &run) {
-
+void approximated_step(Ciphertext &amplitude, 
+                        Ciphertext &b1, 
+                        Ciphertext &b2, 
+                        int degree,
+                        std::vector<Ciphertext> &run,
+                        Evaluator &evaluator, 
+                        FractionalEncoder &encoder, 
+                        Encryptor &encryptor) {
+    Ciphertext offset(b1);
+    evaluator.add(offset, b2);
+    evaluator.multiply_plain(offset, encoder.encode(-0.5));
+    Ciphertext b(b2);
+    evaluator.sub(b, b1);
+    evaluator.multiply_plain(b, encoder.encode(0.5));
+    for (int i = 0; i < 16; i++) {
+        Ciphertext c(b);
+        evaluator.multiply_plain(c, encoder.encode(1.0 / 64.0));
+        for (int j = 1; j <= degree; j++) {
+            double arg_factor = ((float) j) * M_PI / 64.0;
+            Ciphertext cos_arg(b);
+            evaluator.multiply_plain(cos_arg, encoder.encode(arg_factor));
+            Ciphertext sin_arg(offset);
+            evaluator.add_plain(offset, encoder.encode(i));
+            evaluator.multiply_plain(sin_arg, encoder.encode(arg_factor));
+            Ciphertext sin_factor, cos_factor;
+            homomorphic_sin(sin_arg, sin_factor, evaluator, encoder, encryptor);
+            homomorphic_cos(cos_arg, cos_factor, evaluator, encoder, encryptor);
+            Ciphertext term(sin_factor);
+            evaluator.multiply(term, cos_factor);
+            evaluator.multiply_plain(term, encoder.encode(2.0 / M_PI * ((float) j)));
+            evaluator.add(c, term);
+        }
+        evaluator.multiply(c, amplitude);
+        run.push_back(c);
+    }
 } 
 
 /* We want to find the Fourier decomposition of a step function at b_1 and b_2, 
