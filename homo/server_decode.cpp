@@ -114,36 +114,42 @@ int main(int argc, const char** argv) {
     std::ifstream myfile;
     myfile.open(ctext_infile.c_str()); 
     Ciphertext c, index, elem, count;
+    std::vector<std::vector<Ciphertext>> res;
     for (int i = 0; i < 3; i++) {
         std::cout << "Color " << i << std::endl;
         encryptor.encrypt(encoder.encode(0), index);
-        std::vector<Ciphertext> res;
+        std::vector<Ciphertext> channel;
         for (int j = 0; j < width * height; j++) {
             encryptor.encrypt(encoder.encode(0), c);
-            res.push_back(c);
+            channel.push_back(c);
         }
         for (int j = 0; j < pairs[i]; j++) {
             std::cout << "Run " << j << std::endl;
             std::vector<Ciphertext> run;
             elem.load(myfile);
             count.load(myfile);
-            debug_approximated_step(elem, index, count, 63, 0.2, run, evaluator, encoder, encryptor, decryptor);
+            debug_approximated_step(elem, index, count, 63, 0.1, run, evaluator, encoder, encryptor, decryptor);
             for (int k = 0; k < width * height; k++) {
                 // Plaintext p;
                 // decryptor.decrypt(run[k], p);
                 // std::cout << encoder.decode(p) << '\t';
-                evaluator.add(res[k], run[k]);
+                evaluator.add(channel[k], run[k]);
             }
             std::cout << std::endl;
             evaluator.add(index, count);
         }
+        res.push_back(channel);
         for (int j = 0; j < width * height; j++) {
             Plaintext p;
-            decryptor.decrypt(res[j], p);
+            decryptor.decrypt(res[i][j], p);
             std::cout << encoder.decode(p) << '\t';
-            res[j].save(outfile);
         }
         std::cout << std::endl;
+    }
+    for (int i = 0; i < width * height; i++) {
+        for (int j = 0; j < 3; j++) {
+            res[j][i].save(outfile);
+        }
     }
     myfile.close();
     outfile.close();

@@ -17,7 +17,7 @@ int main(int argc, const char** argv) {
     std::string test_filename("./image/encode_test.png");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
-    std::string test_output("./image/test_out.png");
+    std::string test_output("./image/out.png");
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
@@ -219,10 +219,10 @@ int main(int argc, const char** argv) {
         for (int i = 0; i < width * height * 3; i++) {
             c.load(instream);
             decryptor.decrypt(c, p);
-            uint8_t pixel = (uint8_t) encoder.decode(p);
+            int pixel = encoder.decode(p);
             CLAMP(pixel, 0, 255)
-            decrypted_image.push_back(pixel);
-            std::cout << pixel << std::endl;
+            decrypted_image.push_back((uint8_t) pixel);
+            std::cout << (int) pixel << std::endl;
         }
         instream.close();
         std::cout << std::endl;
@@ -232,7 +232,7 @@ int main(int argc, const char** argv) {
 
         std::cout << width << '\t' << height << '\t' << decrypted_image.size() << std::endl;
         #ifdef linux
-            save_image_rgb(width, height, decrypted_image, ctext_outfile);
+            save_image_rgb(width, height, decrypted_image, test_output);
         #else
             show_image_rgb(width, height, decrypted_image);
         #endif

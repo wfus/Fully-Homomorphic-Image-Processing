@@ -46,7 +46,7 @@ if __name__ == '__main__':
             for plain_mod in PLAIN_MOD:
                 for width, height in WIDTH_HEIGHT_PAIRS:
                     for dbc in DBC:
-                        for inter in ['bilinear', 'bicubic']:
+                        for inter in ['bicubic']:
                             logname = log_resize(short_name, inter, width, height, poly_n, plain_mod, dbc)
                             outname = "logs/{}_{}_{}_{}_{}_{}_{}.png".format(short_name, inter, width, height, poly_n, plain_mod, dbc)
                             inter_param = '' if inter == 'bilinear' else '--bicubic'
