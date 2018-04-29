@@ -38,7 +38,7 @@ void approximated_step(Ciphertext &amplitude, Ciphertext &b1, Ciphertext &b2) {
  * Degree will just be the number of terms of approximation
  * Will return the coefficients without the B!
  */
-void calculate_coefficients(std::vector<double> &coeff
+void calculate_coefficients(std::vector<double> &coeff,
                             std::vector<double> &sincoeff,
                             std::vector<double> &coscoeff,
                             int degree) {
@@ -63,7 +63,7 @@ Ciphertext homomorphic_sine(Ciphertext &x,
     encryptor.encrypt(encoder.encode(0), res);
 
     Ciphertext shifted_x(x);
-    evaluator.subtract_plain(shifted_x, encoder.encode(3 * M_PI));
+    evaluator.sub_plain(shifted_x, encoder.encode(3 * M_PI));
 
     Ciphertext power2(shifted_x);
     Ciphertext power4(shifted_x);
