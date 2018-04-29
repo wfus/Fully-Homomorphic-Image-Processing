@@ -1,6 +1,6 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
-// #include "fhe_decode.h"
+#include "fhe_decode.h"
 #include "cxxopts.h"
 
 using namespace seal;
@@ -12,14 +12,15 @@ auto diff = std::chrono::steady_clock::now() - start;
 int main(int argc, const char** argv) {
     
     // Read encryption parameters from file
-    int original_width = 0, original_height = 0, channels = 0;
+    int pairs[3];
+    int width, height;
     std::ifstream paramfile;
     paramfile.open("./keys/params.txt");
-    paramfile >> original_width;
-    paramfile >> original_height;
-    paramfile >> channels;
-    // std::cout << original_width << " " << original_height << std::endl;
-    assert(channels == 3); assert(original_width != 0); assert(original_height != 0);
+    paramfile >> width;
+    paramfile >> height;
+    for (int i = 0; i < 3; i++) {
+        paramfile >> pairs[i];
+    }
     paramfile.close();
     
     std::string ctext_infile("./image/nothingpersonnel.txt");
@@ -47,8 +48,6 @@ int main(int argc, const char** argv) {
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
             ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
             ("pmod", "Plaintext modulus", cxxopts::value<int>())
-            ("w,width", "width of resized image", cxxopts::value<int>())
-            ("h,height", "height of resized image", cxxopts::value<int>())
             ("base", "Polynomial base used for fractional encoding (essentially a number base)", cxxopts::value<int>())
             ("help", "Print help");
 
@@ -66,19 +65,6 @@ int main(int argc, const char** argv) {
         if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
         if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
         if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
-        
-        if (result.count("width")) { 
-            resized_width = result["width"].as<int>(); 
-        } else {
-            std::cout << "Please enter the width/height of the resized image..." << std::endl;
-            std::cout << "\t Use --help to see the options." << std::endl;
-        }
-        if (result.count("height")) { 
-            resized_height = result["height"].as<int>(); 
-        } else {
-            std::cout << "Please enter the width/height of the resized image..." << std::endl;
-            std::cout << "\t Use --help to see the options." << std::endl;
-        }
     } 
     catch (const cxxopts::OptionException& e) {
         std::cout << "error parsing options: " << e.what() << std::endl;
@@ -124,8 +110,32 @@ int main(int argc, const char** argv) {
     FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
     std::ofstream outfile;
-    outfile.open(ctext_outfile.c_str()); 
-    
+    outfile.open(ctext_outfile.c_str());
+    std::ifstream myfile;
+    myfile.open(ctext_infile.c_str()); 
+    Ciphertext c, index, elem, count;
+    for (int i = 0; i < 3; i++) {
+        encryptor.encrypt(encoder.encode(0), index);
+        std::vector<Ciphertext> res;
+        for (int j = 0; j < width * height; j++) {
+            encryptor.encrypt(encoder.encode(0), c);
+            res.push_back(c);
+        }
+        for (int j = 0; j < pairs[i]; j++) {
+            std::vector<Ciphertext> run;
+            elem.load(myfile);
+            count.load(myfile);
+            approximated_step(elem, index, count, run);
+            evaluator.add(index, count);
+            for (int k = 0; k < res.size(); k++) {
+                evaluator.add(res[i], run[i]);
+            }
+        }
+        for (int j = 0; j < width * height; j++) {
+            res[j].save(outfile);
+        }
+    }
+    myfile.close();
     outfile.close();
     return 0;
 }
