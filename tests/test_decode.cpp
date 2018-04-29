@@ -12,7 +12,7 @@ int main(int argc, const char** argv) {
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
-    int plain_modulus = 1 << 10;
+    int plain_modulus = 1 << 14;
     int coeff_modulus = COEFF_MODULUS;
 
     EncryptionParameters params;

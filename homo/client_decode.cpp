@@ -1,6 +1,7 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
 #include "fhe_resize.h"
+#include "fhe_decode.h"
 #include "cxxopts.h"
 
 using namespace seal;
@@ -92,9 +93,9 @@ int main(int argc, const char** argv) {
 
 
         std::ofstream paramfile; 
-        paramfile.open("./keys/params.txt");
-        paramfile << plain_modulus << " ";
-        
+        paramfile.open("./keys/params.txt");  
+        paramfile << width << " ";
+        paramfile << height << " ";      
 
         // Generate keys
         // and save them to file

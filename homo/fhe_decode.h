@@ -1,5 +1,5 @@
-#ifndef FHE_RESIZE_H
-#define FHE_RESIZE_H
+#ifndef FHE_DECODE_H
+#define FHE_DECODE_H
 
 #include <iostream>
 #include <vector>
@@ -11,14 +11,12 @@
 #include "seal/seal.h"
 #include <opencv2/opencv.hpp>
 
-#define BILINEAR 0
-#define BICUBIC 1
 
 using namespace seal;
 using namespace cv;
 
 
-void approximated_step(Ciphertext &amplitude, Ciphertext &b1, Ciphertext &b2) {
+void approximated_step(Ciphertext &amplitude, Ciphertext &b1, Ciphertext &b2, std::vector<Ciphertext> &run) {
 
 } 
 
@@ -61,7 +59,7 @@ void print_ciphertext_debug(Ciphertext &c, Decryptor &decryptor, FractionalEncod
  * -1 + 1/2 (x - (3 \[Pi])/2)^2 - 1/24 (x - (3 \[Pi])/2)^4 + 
  * 1/720 (x - (3 \[Pi])/2)^6 - (x - (3 \[Pi])/2)^8/40320
  */
-Ciphertext homomorphic_sine(Ciphertext &x,
+void homomorphic_sine(Ciphertext &x,
                             Ciphertext &res,
                             Evaluator &evaluator, 
                             FractionalEncoder &encoder, 
