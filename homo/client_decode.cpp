@@ -1,6 +1,6 @@
 #include "seal/seal.h"
 #include "fhe_image.h"
-// #include "fhe_decode.h"
+#include "fhe_resize.h"
 #include "cxxopts.h"
 
 using namespace seal;
@@ -13,10 +13,10 @@ int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
     bool bicubic = false;
-    std::string test_filename("./image/barak.jpg");
+    std::string test_filename("./image/encode_test.jpg");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
-    std::string test_output("./image/test_out.txt");
+    std::string test_output("./image/test_out.jpg");
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
@@ -159,6 +159,7 @@ int main(int argc, const char** argv) {
             encryptor.encrypt(encoder.encode(count), c);
             c.save(myfile);
             paramfile << pairs << " ";
+            std::cout << pairs << std::endl;
         }
         paramfile << std::endl;
         
@@ -187,6 +188,12 @@ int main(int argc, const char** argv) {
         SEALContext context(params);
         // print_parameters(context);
 
+        int width, height;
+        std::ofstream paramfile; 
+        paramfile.open("./keys/params.txt");
+        paramfile << width << " ";
+        paramfile << height << " ";
+        paramfile.close();
 
         // Get keys
         std::ifstream pkfile, skfile;
@@ -208,12 +215,30 @@ int main(int argc, const char** argv) {
 
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
-        // Read in the image as RGB interleaved...
-        // Assuming that there are three channels
-        std::ifstream instream;
+         std::ifstream instream;
         // std::cout << "Loading Ciphertexts now..." << std::endl; 
         instream.open(ctext_infile.c_str());
+        std::vector<uint8_t> decrypted_image;
+        Plaintext p;
+        Ciphertext c;
+        for (int i = 0; i < width * height * 3; i++) {
+            c.load(instream);
+            decryptor.decrypt(c, p);
+            uint8_t pixel = (uint8_t) encoder.decode(p);
+            CLAMP(pixel, 0, 255)
+            decrypted_image.push_back(pixel);
+        }
         instream.close();
+        std::cout << std::endl;
+
+        // Calculate RMS Error
+        // compare_resize_opencv(test_filename.c_str(), resized_width, resized_height, bicubic, decrypted_image);
+
+        #ifdef linux
+            save_image_rgb(width, height, decrypted_image, ctext_outfile);
+        #else
+            show_image_rgb(width, height, decrypted_image);
+        #endif
     }
     return 0;
 }
