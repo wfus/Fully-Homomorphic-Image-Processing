@@ -17,6 +17,11 @@
 using namespace seal;
 using namespace cv;
 
+
+void approximated_step(Ciphertext &amplitude, Ciphertext &b1, Ciphertext &b2) {
+
+} 
+
 /* We want to find the Fourier decomposition of a step function at b_1 and b_2, 
  * and then 0 everywhere else from 0 to 64. 
  * 1             ________
