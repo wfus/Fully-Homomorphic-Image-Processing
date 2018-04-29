@@ -222,15 +222,12 @@ int main(int argc, const char** argv) {
             int pixel = encoder.decode(p);
             CLAMP(pixel, 0, 255)
             decrypted_image.push_back((uint8_t) pixel);
-            std::cout << (int) pixel << std::endl;
         }
         instream.close();
-        std::cout << std::endl;
 
         // Calculate RMS Error
         // compare_resize_opencv(test_filename.c_str(), resized_width, resized_height, bicubic, decrypted_image);
 
-        std::cout << width << '\t' << height << '\t' << decrypted_image.size() << std::endl;
         #ifdef linux
             save_image_rgb(width, height, decrypted_image, test_output);
         #else

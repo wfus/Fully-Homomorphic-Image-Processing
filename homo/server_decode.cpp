@@ -34,6 +34,9 @@ int main(int argc, const char** argv) {
     int coeff_modulus = COEFF_MODULUS;
     int resized_width = 0;
     int resized_height = 0;
+    int degree = 12;
+    int delta = 0.5;
+    int order = 64;
 
 
     try {
@@ -44,6 +47,9 @@ int main(int argc, const char** argv) {
             ("f,file", "Filename for input file to be resized", cxxopts::value<std::string>())
             ("v,verbose", "Verbose logging output", cxxopts::value<bool>(verbose))
             ("o,outfile", "Filename for homomorphic ciphertext to be saved to", cxxopts::value<std::string>())
+            ("delta", "Delta for step function size", cxxopts::value<double>())
+            ("order", "Order of approximation for step function approximation Fourier series", cxxopts::value<int>())
+            ("degree", "Terms for step function approximation", cxxopts::value<int>())
             ("ncoeff", "Number of coefficients for integer portion of encoding", cxxopts::value<int>())
             ("fcoeff", "Number of coefficients for fractional portion of encoding", cxxopts::value<int>())
             ("cmod", "Coefficient Modulus for polynomial encoding", cxxopts::value<int>())
@@ -64,6 +70,9 @@ int main(int argc, const char** argv) {
         if (result.count("fcoeff")) n_fractional_coeffs = result["fcoeff"].as<int>(); 
         if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
         if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
+        if (result.count("degree")) degree = result["degree"].as<int>();  
+        if (result.count("order")) delta = result["order"].as<int>(); 
+        if (result.count("delta")) delta = result["delta"].as<double>(); 
         if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
     } 
     catch (const cxxopts::OptionException& e) {
@@ -128,7 +137,7 @@ int main(int argc, const char** argv) {
             std::vector<Ciphertext> run;
             elem.load(myfile);
             count.load(myfile);
-            debug_approximated_step(elem, index, count, 63, 0.1, run, evaluator, encoder, encryptor, decryptor);
+            approximated_step(elem, index, count, order, degree, delta, width, height, run, evaluator, encoder, encryptor, decryptor);
             for (int k = 0; k < width * height; k++) {
                 // Plaintext p;
                 // decryptor.decrypt(run[k], p);

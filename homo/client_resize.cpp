@@ -228,9 +228,9 @@ int main(int argc, const char** argv) {
             diff = std::chrono::steady_clock::now() - start; 
             std::cout << chrono::duration<double, milli>(diff).count() << ',';
             // std::cout << i << '\t' << encoder.decode(p) << std::endl;
-            uint8_t pixel = (uint8_t) encoder.decode(p);
+            int pixel = encoder.decode(p);
             CLAMP(pixel, 0, 255)
-            decrypted_image.push_back(pixel);
+            decrypted_image.push_back((uint8_t) pixel);
         }
         instream.close();
         std::cout << std::endl;
