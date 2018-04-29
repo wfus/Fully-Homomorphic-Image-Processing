@@ -15,44 +15,6 @@
 using namespace seal;
 using namespace cv;
 
-
-void approximated_step(Ciphertext &amplitude, 
-                        Ciphertext &b1, 
-                        Ciphertext &b2, 
-                        int degree,
-                        std::vector<Ciphertext> &run,
-                        Evaluator &evaluator, 
-                        FractionalEncoder &encoder, 
-                        Encryptor &encryptor) {
-    Ciphertext offset(b1);
-    evaluator.add(offset, b2);
-    evaluator.multiply_plain(offset, encoder.encode(-0.5));
-    Ciphertext b(b2);
-    evaluator.sub(b, b1);
-    evaluator.multiply_plain(b, encoder.encode(0.5));
-    for (int i = 0; i < 16; i++) {
-        Ciphertext c(b);
-        evaluator.multiply_plain(c, encoder.encode(1.0 / 64.0));
-        for (int j = 1; j <= degree; j++) {
-            double arg_factor = ((float) j) * M_PI / 64.0;
-            Ciphertext cos_arg(b);
-            evaluator.multiply_plain(cos_arg, encoder.encode(arg_factor));
-            Ciphertext sin_arg(offset);
-            evaluator.add_plain(offset, encoder.encode(i));
-            evaluator.multiply_plain(sin_arg, encoder.encode(arg_factor));
-            Ciphertext sin_factor, cos_factor;
-            homomorphic_sin(sin_arg, sin_factor, evaluator, encoder, encryptor);
-            homomorphic_cos(cos_arg, cos_factor, evaluator, encoder, encryptor);
-            Ciphertext term(sin_factor);
-            evaluator.multiply(term, cos_factor);
-            evaluator.multiply_plain(term, encoder.encode(2.0 / M_PI * ((float) j)));
-            evaluator.add(c, term);
-        }
-        evaluator.multiply(c, amplitude);
-        run.push_back(c);
-    }
-} 
-
 /* We want to find the Fourier decomposition of a step function at b_1 and b_2, 
  * and then 0 everywhere else from 0 to 64. 
  * 1             ________
@@ -69,16 +31,6 @@ void approximated_step(Ciphertext &amplitude,
  * Degree will just be the number of terms of approximation
  * Will return the coefficients without the B!
  */
-void calculate_coefficients(std::vector<double> &coeff,
-                            std::vector<double> &sincoeff,
-                            std::vector<double> &coscoeff,
-                            int degree) {
-    for (int i = 1; i <= degree; i++) {
-        coeff.push_back(2.0/(i * M_PI));
-        sincoeff.push_back(i * M_PI/64.0);
-        coscoeff.push_back(i * M_PI/64.0);
-    }
-}
 
 void print_ciphertext_debug(Ciphertext &c, Decryptor &decryptor, FractionalEncoder &encoder) {
     Plaintext p;
@@ -93,7 +45,7 @@ void print_ciphertext_debug(Ciphertext &c, Decryptor &decryptor, FractionalEncod
  * 1/720 (x - (3 \[Pi])/2)^6 - (x - (3 \[Pi])/2)^8/40320
  * +((x - (3 \[Pi])/2)^10/3628800) - (x - (3 \[Pi])/2)^12/479001600
  */
-void homomorphic_sine(Ciphertext &x,
+void homomorphic_sin(Ciphertext &x,
                             Ciphertext &res,
                             Evaluator &evaluator, 
                             FractionalEncoder &encoder, 
@@ -173,7 +125,7 @@ void homomorphic_sine(Ciphertext &x,
  * we will get better approximations because of range of B. The coefficients will be
  * 1 - x^2/2 + x^4/24 - x^6/720 + x^8/40320 - x^10/3628800
  */
-Ciphertext homomorphic_cosine(Ciphertext &x,
+Ciphertext homomorphic_cos(Ciphertext &x,
                               Ciphertext &res,
                               Evaluator &evaluator, 
                               FractionalEncoder &encoder, 
@@ -246,5 +198,86 @@ Ciphertext homomorphic_cosine(Ciphertext &x,
     evaluator.add(res, power10);
     //evaluator.add(res, power12);
 }
+
+void approximated_step(Ciphertext &amplitude, 
+                        Ciphertext &index, 
+                        Ciphertext &count, 
+                        int degree,
+                        std::vector<Ciphertext> &run,
+                        Evaluator &evaluator, 
+                        FractionalEncoder &encoder, 
+                        Encryptor &encryptor,
+                        Decryptor &decryptor) {
+    Plaintext p1, p2, p3, p4, p5;
+    Ciphertext b(count);
+    evaluator.multiply_plain(b, encoder.encode(0.5));
+    Ciphertext offset(index);
+    evaluator.add(offset, b);
+    evaluator.add_plain(offset, encoder.encode(-0.5));
+    evaluator.negate(offset);
+    decryptor.decrypt(amplitude, p1);
+    decryptor.decrypt(index, p2);
+    decryptor.decrypt(count, p3);
+    decryptor.decrypt(offset, p4);
+    decryptor.decrypt(b, p5);
+    std::cout << encoder.decode(p1) << '\t' << encoder.decode(p2) << '\t' << encoder.decode(p3) << '\t' << encoder.decode(p4) << '\t' << encoder.decode(p5) << std::endl;
+    for (int i = 0; i < 16; i++) {
+        Ciphertext c(b);
+        evaluator.multiply_plain(c, encoder.encode(1.0 / 64.0));
+        for (int j = 1; j <= degree; j++) {
+            double arg_factor = ((float) j) * M_PI / 64.0;
+            Ciphertext sin_arg(b);
+            evaluator.multiply_plain(sin_arg, encoder.encode(arg_factor));
+            Ciphertext cos_arg(offset);
+            evaluator.add_plain(offset, encoder.encode(i));
+            evaluator.multiply_plain(cos_arg, encoder.encode(arg_factor));
+            Ciphertext sin_factor, cos_factor;
+            homomorphic_sin(sin_arg, sin_factor, evaluator, encoder, encryptor);
+            homomorphic_cos(cos_arg, cos_factor, evaluator, encoder, encryptor);
+            Ciphertext term(sin_factor);
+            evaluator.multiply(term, cos_factor);
+            evaluator.multiply_plain(term, encoder.encode(2.0 / (M_PI * ((float) j))));
+            evaluator.add(c, term);
+        }
+        evaluator.multiply(c, amplitude);
+        run.push_back(c);
+    }
+} 
+
+void debug_approximated_step(Ciphertext &amplitude, 
+                        Ciphertext &index, 
+                        Ciphertext &count, 
+                        int degree,
+                        std::vector<Ciphertext> &run,
+                        Evaluator &evaluator, 
+                        FractionalEncoder &encoder, 
+                        Encryptor &encryptor,
+                        Decryptor &decryptor) {
+    Plaintext p;
+    decryptor.decrypt(amplitude, p);
+    double amp = encoder.decode(p);
+    decryptor.decrypt(index, p);
+    double ind = encoder.decode(p);
+    decryptor.decrypt(count, p);
+    double cnt = encoder.decode(p);
+    double b = cnt / 2.0;
+    double offset = -(ind + b - 0.5);
+    std::cout << amp << '\t' << ind << '\t' << cnt << '\t' << b << '\t' << offset << std::endl;
+    for (int i = 0; i < 16; i++) {
+        double res = b / 64.0;
+        for (int j = 1; j <= degree; j++) {
+            double arg_factor = ((float) j) * M_PI / 64.0;
+            double sin_factor = sin(arg_factor * b);
+            double cos_factor = cos(arg_factor * (i + offset));
+            double term = 2.0 / (M_PI * ((float) j)) * cos_factor * sin_factor;
+            res += term;
+        }
+        res *= amp;
+        Ciphertext c;
+        encryptor.encrypt(encoder.encode(res), c);
+        run.push_back(c);
+    }
+
+} 
 
 #endif
