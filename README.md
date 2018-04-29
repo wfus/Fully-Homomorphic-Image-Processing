@@ -13,7 +13,7 @@ This is difficult to do because converting the run length decoding into a boolea
 
 Since the boolean circuit approach is not feasable by __many multiple orders of magnitude__, we use an approximation approach. For each run length tuple, we approximate a "step" function defined by 1 if between b1 and b2 and 0 otherwise using a discrete Fourier series. We also taylor expand the cosine and sine function. Note that it is difficult to use a sigmoid type function for approximating, because we cannot use division. A sample approximation of the step-like function with a discrete fourier series is shown in the following graph.
 
-![approximategraph](approxstep.png)
+![approximategraph](docs/approxstep.png)
 
 
 
