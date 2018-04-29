@@ -35,7 +35,7 @@ int main(int argc, const char** argv) {
     int resized_width = 0;
     int resized_height = 0;
     int degree = 12;
-    int delta = 0.5;
+    double delta = 0.5;
     int order = 64;
 
 
@@ -71,7 +71,7 @@ int main(int argc, const char** argv) {
         if (result.count("pmod")) plain_modulus = result["pmod"].as<int>(); 
         if (result.count("cmod")) coeff_modulus = result["cmod"].as<int>(); 
         if (result.count("degree")) degree = result["degree"].as<int>();  
-        if (result.count("order")) delta = result["order"].as<int>(); 
+        if (result.count("order")) order = result["order"].as<int>(); 
         if (result.count("delta")) delta = result["delta"].as<double>(); 
         if (result.count("n_poly_base")) n_poly_base = result["base"].as<int>(); 
     } 
@@ -125,7 +125,6 @@ int main(int argc, const char** argv) {
     Ciphertext c, index, elem, count;
     std::vector<std::vector<Ciphertext>> res;
     for (int i = 0; i < 3; i++) {
-        std::cout << "Color " << i << std::endl;
         encryptor.encrypt(encoder.encode(0), index);
         std::vector<Ciphertext> channel;
         for (int j = 0; j < width * height; j++) {
@@ -133,7 +132,6 @@ int main(int argc, const char** argv) {
             channel.push_back(c);
         }
         for (int j = 0; j < pairs[i]; j++) {
-            std::cout << "Run " << j << std::endl;
             std::vector<Ciphertext> run;
             elem.load(myfile);
             count.load(myfile);
@@ -144,7 +142,6 @@ int main(int argc, const char** argv) {
                 // std::cout << encoder.decode(p) << '\t';
                 evaluator.add(channel[k], run[k]);
             }
-            std::cout << std::endl;
             evaluator.add(index, count);
         }
         res.push_back(channel);
