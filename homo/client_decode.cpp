@@ -13,7 +13,7 @@ int main(int argc, const char** argv) {
     bool recieving = false;
     bool sending = false;
     bool bicubic = false;
-    std::string test_filename("./image/encode_test.jpg");
+    std::string test_filename("./image/encode_test.png");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
     std::string test_output("./image/test_out.jpg");
@@ -76,6 +76,10 @@ int main(int argc, const char** argv) {
     }
 
     if (sending) {
+
+        const int requested_composition = 3;
+        int width = 0, height = 0, actual_composition = 0;
+        uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
         // Encryption Parameters
         EncryptionParameters params;
         char poly_mod[16];
@@ -123,15 +127,6 @@ int main(int argc, const char** argv) {
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
-    
-        std::ifstream infile;
-        infile.open(test_filename.c_str());
-        int image_data[3 * width * height];
-        char comma;
-        for (int i = 0; i < 3 * width * height; i++) {
-            infile >> image_data[i] >> comma; 
-
-        }
         std::ofstream myfile;
         myfile.open(ctext_outfile.c_str());
         Ciphertext c;
@@ -159,7 +154,6 @@ int main(int argc, const char** argv) {
             encryptor.encrypt(encoder.encode(count), c);
             c.save(myfile);
             paramfile << pairs << " ";
-            std::cout << pairs << std::endl;
         }
         paramfile << std::endl;
         
