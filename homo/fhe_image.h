@@ -25,6 +25,7 @@ const int N_NUMBER_COEFFS = 100;
 
 const int PLAIN_MODULUS = 1 << 14;
 const int COEFF_MODULUS = 8192;
+const int DBC = 30;
 
 // Constants for jpg processing
 
