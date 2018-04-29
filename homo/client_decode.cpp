@@ -17,7 +17,7 @@ int main(int argc, const char** argv) {
     std::string test_filename("./image/encode_test.png");
     std::string ctext_outfile("./image/nothingpersonnel.txt");
     std::string ctext_infile("./image/zoop.txt");
-    std::string test_output("./image/test_out.jpg");
+    std::string test_output("./image/test_out.png");
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
