@@ -41,7 +41,7 @@ int main(int argc, const char** argv) {
         Ciphertext c, res;
         Plaintext p;
         encryptor.encrypt(encoder.encode(test_numbers[i]), c);
-        homomorphic_sine(c, res, evaluator, encoder, encryptor);
+        homomorphic_sin(c, res, evaluator, encoder, encryptor);
         std::cout << "Noise Budget Left: " << decryptor.invariant_noise_budget(res) << std::endl;
         decryptor.decrypt(res, p);
         std::cout << "Res: " << encoder.decode(p) << " Actual Sin: " << sin(test_numbers[i]) << std::endl;

@@ -184,10 +184,10 @@ int main(int argc, const char** argv) {
         // print_parameters(context);
 
         int width, height;
-        std::ofstream paramfile; 
+        std::ifstream paramfile; 
         paramfile.open("./keys/params.txt");
-        paramfile << width << " ";
-        paramfile << height << " ";
+        paramfile >> width;
+        paramfile >> height;
         paramfile.close();
 
         // Get keys
@@ -210,7 +210,7 @@ int main(int argc, const char** argv) {
 
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
-         std::ifstream instream;
+        std::ifstream instream;
         // std::cout << "Loading Ciphertexts now..." << std::endl; 
         instream.open(ctext_infile.c_str());
         std::vector<uint8_t> decrypted_image;
@@ -222,6 +222,7 @@ int main(int argc, const char** argv) {
             uint8_t pixel = (uint8_t) encoder.decode(p);
             CLAMP(pixel, 0, 255)
             decrypted_image.push_back(pixel);
+            std::cout << pixel << std::endl;
         }
         instream.close();
         std::cout << std::endl;
@@ -229,6 +230,7 @@ int main(int argc, const char** argv) {
         // Calculate RMS Error
         // compare_resize_opencv(test_filename.c_str(), resized_width, resized_height, bicubic, decrypted_image);
 
+        std::cout << width << '\t' << height << '\t' << decrypted_image.size() << std::endl;
         #ifdef linux
             save_image_rgb(width, height, decrypted_image, ctext_outfile);
         #else
