@@ -148,12 +148,6 @@ int main(int argc, const char** argv) {
             evaluator.add(index, count);
         }
         res.push_back(channel);
-        for (int j = 0; j < width * height; j++) {
-            Plaintext p;
-            decryptor.decrypt(res[i][j], p);
-            std::cout << encoder.decode(p) << '\t';
-        }
-        std::cout << std::endl;
     }
     for (int i = 0; i < width * height; i++) {
         for (int j = 0; j < 3; j++) {

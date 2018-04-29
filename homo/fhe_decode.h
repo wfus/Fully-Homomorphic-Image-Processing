@@ -264,7 +264,6 @@ void approximated_step(Ciphertext &amplitude,
     double b = cnt / 2.0;
     double offset = -(ind + b - 0.5);
     b += delta - 0.5;
-    std::cout << amp << '\t' << ind << '\t' << cnt << '\t' << b << '\t' << offset << std::endl;
     for (int i = 0; i < width * height; i++) {
         double res = b / ((double) order);
         for (int j = 1; j <= degree; j++) {
