@@ -128,7 +128,7 @@ int main(int argc, const char** argv) {
             std::vector<Ciphertext> run;
             elem.load(myfile);
             count.load(myfile);
-            debug_approximated_step(elem, index, count, 63, 0.1, run, evaluator, encoder, encryptor, decryptor);
+            debug_approximated_step(elem, index, count, 63, 0.5, run, evaluator, encoder, encryptor, decryptor);
             for (int k = 0; k < width * height; k++) {
                 // Plaintext p;
                 // decryptor.decrypt(run[k], p);
