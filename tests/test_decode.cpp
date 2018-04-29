@@ -12,7 +12,7 @@ int main(int argc, const char** argv) {
     int n_number_coeffs = N_NUMBER_COEFFS;
     int n_fractional_coeffs = N_FRACTIONAL_COEFFS;
     int n_poly_base = POLY_BASE;
-    int plain_modulus = 1 << 10;
+    int plain_modulus = 1 << 14;
     int coeff_modulus = COEFF_MODULUS;
 
     EncryptionParameters params;
@@ -40,7 +40,7 @@ int main(int argc, const char** argv) {
     for (int i = 0; i < test_numbers.size(); i++) {
         Ciphertext c, res;
         Plaintext p;
-        encryptor.encrypt(encoder.encode(test_numbers[i]),c);
+        encryptor.encrypt(encoder.encode(test_numbers[i]), c);
         homomorphic_sine(c, res, evaluator, encoder, encryptor);
         std::cout << "Noise Budget Left: " << decryptor.invariant_noise_budget(res) << std::endl;
         decryptor.decrypt(res, p);
