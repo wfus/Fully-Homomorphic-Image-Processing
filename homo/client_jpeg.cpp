@@ -75,8 +75,6 @@ int main(int argc, const char** argv) {
         int width = 0, height = 0, actual_composition = 0;
         uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
 
-
-
        // Encryption Parameters
         EncryptionParameters params;
         char poly_mod[16];
@@ -95,21 +93,16 @@ int main(int argc, const char** argv) {
         paramfile << plain_modulus << std::endl;
         paramfile.close();
 
-
         // Generate keys
         // and save them to file
         std::ofstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        // start = std::chrono::steady_clock::now(); 
         KeyGenerator keygen(context);
         auto public_key = keygen.public_key();
         auto secret_key = keygen.secret_key();
         public_key.save(pkfile);
         secret_key.save(skfile);
-        // diff = std::chrono::steady_clock::now() - start; 
-        // std::cout << "KeyGen: ";
-        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
         // Encrytor and decryptor setup
@@ -121,17 +114,6 @@ int main(int argc, const char** argv) {
         // Example: if poly_base = 11, and N_FRACTIONAL_COEFFS=3, then we will have 
         // a1 * 11^-1 + a2 * 11^-2 + a3 * 11^-3
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
-
-
-        // Check if our parameters are able to PARALLELIZE
-        auto qualifiers = context.qualifiers();
-        std::cout << "IS BATCHING ENABLED: Y/N " << qualifiers.enable_batching << std::endl; 
-
-        // Make a PolyCRT builder clas for the encoding, uses CRT to batch
-        PolyCRTBuilder crtbuilder(context);
-        int slot_count = crtbuilder.slot_count();
-        int row_size = slot_count /2;
-        std::cout << "Row size: " << row_size << std::endl;
 
         // Write the ciphertext to file block by block - since most times
         // ciphertext doesn't fit directly in RAM
@@ -200,7 +182,6 @@ int main(int argc, const char** argv) {
         paramfile.open("./keys/params.txt");
         paramfile >> WIDTH;
         paramfile >> HEIGHT;
-        // std::cout << WIDTH << " " << HEIGHT << std::endl;
         paramfile.close();
 
 
@@ -219,19 +200,14 @@ int main(int argc, const char** argv) {
         std::ifstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        // start = std::chrono::steady_clock::now(); 
         PublicKey public_key;
         SecretKey secret_key;
         public_key.load(pkfile);
         secret_key.load(skfile);
-        // diff = std::chrono::steady_clock::now() - start; 
-        // std::cout << "Key Load Time: ";
-        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
         Encryptor encryptor(context, public_key);
         Evaluator evaluator(context);
-        // FOR DEBUGGING ONLY!
         Decryptor decryptor(context, secret_key);
 
         // Base + Number of coefficients used for encoding past the decimal point (both pos and neg)

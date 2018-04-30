@@ -99,23 +99,15 @@ int main(int argc, const char** argv) {
 
         // Generate keys
         // and save them to file
-        std::ofstream pkfile, skfile, ekfile;
+        std::ofstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        ekfile.open("./keys/evalkey.txt");
-        // start = std::chrono::steady_clock::now(); 
         KeyGenerator keygen(context);
         auto public_key = keygen.public_key();
         auto secret_key = keygen.secret_key();
-        EvaluationKeys ev_key;
-        keygen.generate_evaluation_keys(dbc, ev_key);
         public_key.save(pkfile);
         secret_key.save(skfile);
-        ev_key.save(ekfile);
-        // diff = std::chrono::steady_clock::now() - start; 
-        // std::cout << "KeyGen: ";
-        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-        pkfile.close(); skfile.close(); ekfile.close();
+        pkfile.close(); skfile.close();
 
 
         // Encrytor and decryptor setup
@@ -157,10 +149,6 @@ int main(int argc, const char** argv) {
             paramfile << pairs << " ";
         }
         paramfile << std::endl;
-        
-       
-        // std::cout << width << " " << height << std::endl;
-
        
         paramfile.close();
         myfile.close();
@@ -194,14 +182,10 @@ int main(int argc, const char** argv) {
         std::ifstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        // start = std::chrono::steady_clock::now(); 
         PublicKey public_key;
         SecretKey secret_key;
         public_key.load(pkfile);
         secret_key.load(skfile);
-        // diff = std::chrono::steady_clock::now() - start; 
-        // std::cout << "Key Load Time: ";
-        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
         Encryptor encryptor(context, public_key);
@@ -211,7 +195,6 @@ int main(int argc, const char** argv) {
         FractionalEncoder encoder(context.plain_modulus(), context.poly_modulus(), n_number_coeffs, n_fractional_coeffs, n_poly_base);
 
         std::ifstream instream;
-        // std::cout << "Loading Ciphertexts now..." << std::endl; 
         instream.open(ctext_infile.c_str());
         std::vector<uint8_t> decrypted_image;
         Plaintext p;
@@ -224,10 +207,7 @@ int main(int argc, const char** argv) {
             decrypted_image.push_back((uint8_t) pixel);
         }
         instream.close();
-
-        // Calculate RMS Error
-        // compare_resize_opencv(test_filename.c_str(), resized_width, resized_height, bicubic, decrypted_image);
-
+        
         #ifdef linux
             save_image_rgb(width, height, decrypted_image, test_output);
         #else

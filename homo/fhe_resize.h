@@ -143,60 +143,6 @@ void show_image_rgb(int width, int height,
 inline void Cubic(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &C, Ciphertext &D, Ciphertext &t,
                             Evaluator &evaluator, 
                             FractionalEncoder &encoder, 
-                            Encryptor &encryptor,
-                            EvaluationKeys &ev_key) {
-    auto start = std::chrono::steady_clock::now();
-    Ciphertext a, b, c, d;
-    Ciphertext boaz1(A); 
-    Ciphertext boaz2(B); evaluator.multiply_plain(boaz2, encoder.encode(3)); 
-    evaluator.sub(boaz2, boaz1);
-    Ciphertext boaz3(C); evaluator.multiply_plain(boaz3, encoder.encode(3)); 
-    evaluator.sub(boaz2, boaz3); 
-    Ciphertext boaz4(D);
-    evaluator.add(boaz2, boaz4);
-    a = boaz2;
-
-    Ciphertext boaz5(A); evaluator.multiply_plain(boaz5, encoder.encode(2));
-    Ciphertext boaz6(B); evaluator.multiply_plain(boaz6, encoder.encode(5));
-    evaluator.sub(boaz5, boaz6); 
-    Ciphertext boaz7(C); evaluator.multiply_plain(boaz7, encoder.encode(4)); 
-    evaluator.add(boaz5, boaz7);
-    Ciphertext boaz8(D);
-    evaluator.sub(boaz5, boaz8); 
-    b = boaz5;
-
-    Ciphertext boaz9(A); 
-    Ciphertext boaz10(C);
-    evaluator.sub(boaz10, boaz9);
-    c = boaz10;
-
-    d = B;
-
-    Ciphertext t2(t); evaluator.square(t2);
-    evaluator.relinearize(t2, ev_key);
-    Ciphertext t3(t); evaluator.multiply(t3, t);
-    evaluator.relinearize(t3, ev_key);
-
-    evaluator.multiply(a, t3);
-    // evaluator.relinearize(a, ev_key);
-    evaluator.multiply(b, t2);
-    // evaluator.relinearize(b, ev_key);
-    evaluator.multiply(c, t); 
-    // evaluator.relinearize(c, ev_key);  
-        
-    evaluator.add(a, b);
-    evaluator.add(a, c);
-    evaluator.multiply_plain(a, encoder.encode(0.5));
-    evaluator.add(a, d);
-    result = a;
-    auto diff = std::chrono::steady_clock::now() - start;
-    std::cout << chrono::duration<double, milli>(diff).count() << ',';
-    return;
-}
-
-inline void Cubic(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &C, Ciphertext &D, Ciphertext &t,
-                            Evaluator &evaluator, 
-                            FractionalEncoder &encoder, 
                             Encryptor &encryptor) {
     auto start = std::chrono::steady_clock::now();
     Ciphertext a, b, c, d;
@@ -242,24 +188,6 @@ inline void Cubic(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &
     return;
 }
 
-
-inline void Linear(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &t,
-                    Evaluator &evaluator, 
-                    FractionalEncoder &encoder, 
-                    Encryptor &encryptor,
-                    EvaluationKeys &ev_key) {
-    auto start = std::chrono::steady_clock::now();
-    Ciphertext boaz1(t); evaluator.negate(boaz1); evaluator.add_plain(boaz1, encoder.encode(1.0)); 
-    evaluator.multiply(boaz1, A); 
-    Ciphertext boaz2(B); evaluator.multiply(boaz2, t); 
-    evaluator.add(boaz1, boaz2); 
-    result = boaz1;
-    auto diff = std::chrono::steady_clock::now() - start;
-    std::cout << chrono::duration<double, milli>(diff).count() << ',';
-    return;
-}
-
-
 inline void Linear(Ciphertext &result, Ciphertext &A, Ciphertext &B, Ciphertext &t,
                    Evaluator &evaluator, 
                    FractionalEncoder &encoder, 
@@ -294,8 +222,7 @@ inline std::vector<Ciphertext> GetPixelClamped (const SImageData& image, int x, 
 inline void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image, float x, float y,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor,
-                    EvaluationKeys &ev_key)
+                    Encryptor &encryptor)
 {
     // calculate coordinates -> also need to offset by half a pixel to keep image from shifting down and left half a pixel
     int xint = int(x);
@@ -317,9 +244,9 @@ inline void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image,
     
     for (int i = 0; i < 3; ++i)
     {
-        Linear(col0, p00[i], p10[i], xfract, evaluator, encoder, encryptor, ev_key);
-        Linear(col1, p01[i], p11[i], xfract, evaluator, encoder, encryptor, ev_key);
-        Linear(ret[i], col0, col1, yfract, evaluator, encoder, encryptor, ev_key);
+        Linear(col0, p00[i], p10[i], xfract, evaluator, encoder, encryptor);
+        Linear(col1, p01[i], p11[i], xfract, evaluator, encoder, encryptor);
+        Linear(ret[i], col0, col1, yfract, evaluator, encoder, encryptor);
     }
     return; 
 }
@@ -327,8 +254,7 @@ inline void SampleLinear (std::vector<Ciphertext> &ret, const SImageData& image,
 inline void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image, float x, float y,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor,
-                    EvaluationKeys &ev_key)
+                    Encryptor &encryptor)
 {
     // calculate coordinates -> also need to offset by half a pixel to keep image from shifting down and left half a pixel
     int xint = int(x);
@@ -369,11 +295,11 @@ inline void SampleBicubic (std::vector<Ciphertext> &ret, const SImageData& image
     Ciphertext col0, col1, col2, col3;
     for (int i = 0; i < 3; ++i)
     {
-        Cubic(col0, p00[i], p10[i], p20[i], p30[i], xfract, evaluator, encoder, encryptor, ev_key);
-        Cubic(col1, p01[i], p11[i], p21[i], p31[i], xfract, evaluator, encoder, encryptor, ev_key);
-        Cubic(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor, ev_key);
-        Cubic(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor, ev_key);
-        Cubic(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor, ev_key);
+        Cubic(col0, p00[i], p10[i], p20[i], p30[i], xfract, evaluator, encoder, encryptor);
+        Cubic(col1, p01[i], p11[i], p21[i], p31[i], xfract, evaluator, encoder, encryptor);
+        Cubic(col2, p02[i], p12[i], p22[i], p32[i], xfract, evaluator, encoder, encryptor);
+        Cubic(col3, p03[i], p13[i], p23[i], p33[i], xfract, evaluator, encoder, encryptor);
+        Cubic(ret[i], col0, col1, col2, col3, yfract, evaluator, encoder, encryptor);
     }
     return;
 }
@@ -383,8 +309,7 @@ void ResizeImage (String infile_str, int original_width, int original_height,
                     SImageData &destImage, int dest_width, int dest_height, int inter,
                     Evaluator &evaluator, 
                     FractionalEncoder &encoder, 
-                    Encryptor &encryptor,
-                    EvaluationKeys &ev_key)
+                    Encryptor &encryptor)
 {
     std::ifstream infile;
     infile.open(infile_str.c_str());
@@ -453,20 +378,20 @@ void ResizeImage (String infile_str, int original_width, int original_height,
             srcImage.pixels = new_pixels;
         }
 
-        
-
         for (int x = 0; x < destImage.width; ++x) {
             float u = float(x) / float(destImage.width - 1) * float(srcImage.width) - 0.5;
             std::vector<Ciphertext> sample(3);
             if (inter == BILINEAR) {
-                SampleLinear(sample, srcImage, u, v, evaluator, encoder, encryptor, ev_key);
+                SampleLinear(sample, srcImage, u, v, evaluator, encoder, encryptor);
             } else if (inter == BICUBIC) {
-                SampleBicubic(sample, srcImage, u, v, evaluator, encoder, encryptor, ev_key);
+                SampleBicubic(sample, srcImage, u, v, evaluator, encoder, encryptor);
             }
             destImage.pixels.push_back(sample);
         }
     }
 }
+
+
 
 
 #endif

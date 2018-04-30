@@ -15,7 +15,6 @@ void save_three_blocks_interleaved_ycc(std::ofstream &file,
 
 
 int main(int argc, const char** argv) {
-
     // Read encryption parameters from file
     int WIDTH = 0, HEIGHT = 0, channels = 0;
     std::ifstream paramfile;
@@ -23,7 +22,6 @@ int main(int argc, const char** argv) {
     paramfile >> WIDTH;
     paramfile >> HEIGHT;
     paramfile >> channels;
-    // std::cout << original_width << " " << original_height << std::endl;
     assert(channels == 3);
     paramfile.close();
     
@@ -81,7 +79,6 @@ int main(int argc, const char** argv) {
     params.set_plain_modulus(plain_modulus);
     SEALContext context(params);
     // print_parameters(context);
-
 
     // Generate keys
     std::ifstream pkfile, skfile;

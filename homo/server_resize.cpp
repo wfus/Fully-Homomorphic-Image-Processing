@@ -19,7 +19,6 @@ int main(int argc, const char** argv) {
     paramfile >> original_width;
     paramfile >> original_height;
     paramfile >> channels;
-    // std::cout << original_width << " " << original_height << std::endl;
     assert(channels == 3); assert(original_width != 0); assert(original_height != 0);
     paramfile.close();
     
@@ -99,21 +98,14 @@ int main(int argc, const char** argv) {
 
 
     // Generate keys
-    std::ifstream pkfile, skfile, ekfile;
+    std::ifstream pkfile, skfile;
     pkfile.open("./keys/pubkey.txt");
     skfile.open("./keys/seckey.txt");
-    ekfile.open("./keys/evalkey.txt");
-    // start = std::chrono::steady_clock::now(); 
     PublicKey public_key;
     SecretKey secret_key;
-    EvaluationKeys ev_key;
     public_key.load(pkfile);
     secret_key.load(skfile);
-    ev_key.load(ekfile);
-    // diff = std::chrono::steady_clock::now() - start; 
-    // std::cout << "Key Load Time: ";
-    // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-    pkfile.close(); skfile.close(); ekfile.close();   
+    pkfile.close(); skfile.close();
 
 
     // Encrytor and decryptor setup
@@ -142,8 +134,7 @@ int main(int argc, const char** argv) {
         INTER_TYPE,
         evaluator,
         encoder,
-        encryptor,
-        ev_key
+        encryptor
     );
     std::cout << std::endl;
 
