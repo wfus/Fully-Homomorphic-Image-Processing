@@ -64,7 +64,7 @@ and multiply by a [quantization](https://en.wikipedia.org/wiki/Quantization_(ima
 
 The quality of the encoding depends quite significantly on the parameters used. Some examples are as follows, as what happens when the noise budget limit is exceeded or the values in the DCT overflow or clip. 
 
-![encodeboaz](docs/jpegboaz)
+![encodeboaz](docs/jpegboaz.png)
 
 
 
@@ -109,3 +109,30 @@ We used a few external libraries and source code, here are links to their respec
 * [ffmpeg](https://www.ffmpeg.org/), video transcoding and audio processing library
 * [C++ Command Line Options](https://github.com/jarro2783/cxxopts), for quality of life
 * [Image Resizing](https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/) by demofox
+
+
+## Paper Sources that may be interesting
+
+* C. Gentry. Fully Homomorphic Encryption Using Ideal Lattices. In \textit{STOC}, 2009.
+
+* C. Gentry, S. Halevi, and N.P. Smart.  Fully Homomorphic Encryption with Polylog Overhead. In \textit{Advances in Cryptology - EUROCRYPT}, 2012.
+
+* N. Dowlin, R. Gilad-Bachrach, K. Laine, K. Lauter, M. Naehrig, and J. Wernsing. Manual for Using Homomorphic Encryption for Bioinformatics. In \textit{Proceedings of the IEEE}, 2017.
+
+* C. Gentry, S. Halevi, and N.P. Smart. Homomorphic Evaluation of the AES Circuit. In \textit{Advances in Cryptology – CRYPTO}, 2012.
+
+* N. Dowlin, R. Gilad-Bachrach, K. Laine, K. Lauter, M. Naehrig, and J. Wernsing. CryptoNets: Applying Neural Networks to Encrypted Data with High Throughput and Accuracy. In \textit{Proceedings of the 33rd International Conference on International Conference on Machine Learning}, 2016.
+
+* A. Costache, N.P. Smart, and S. Vivek. Faster Homomorphic Evaluation of Discrete Fourier Transforms. In \textit{International Conference on Financial Cryptography and Data Security}, 2017.
+
+* J. Cheon, M. Kim, and K. Lauter. Homomorphic Computation of Edit Distance. In \textit{International Conference on Financial Cryptography and Data Security}, 2015.
+
+* H. Chen, K. Han, Z. Huang, A. Jalali, and K. Laine. Simple Encrypted Arithmetic Library v2.3.0. 2017.
+
+* J. Fan and F. Vercauteren. Somewhat Practical Fully Homomorphic Encryption. In \textit{IACR Cryptology ePrint Archive}, 2012.
+
+* Cmglee. Comparison of 1D and 2D interpolation. 2016. Available: \url{https://commons.wikimedia.org/wiki/FileComparison\_of\_1D\_and\_2D\_interpolation.svg}
+
+* N. Buscher and S. Katzenbeisser. Compilation for Secure Multi-party Computation. Springer International Publishing, 2017. 
+
+
