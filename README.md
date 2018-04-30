@@ -1,6 +1,32 @@
 # Fully Homomorphic Image Processing using SEAL
 These days neural networks and fully homomorphic encryption are a meme. For example, Microsoft demonstrated with Cryptonets of a neural network generating predictions fully homomorphically on the MNIST dataset. However, it would be useful to have a way to preprocess images homomorphically. Consider the use case where an edge device sends a homomorphically encrypted image to a server that runs a prediction algorithm with two neural networks that take in different sized features, as is common. It would be prohibitive to make the edge device homomorphically encrypt two copies of the images, since that would be prohibitively expensive. Therefore, having proprocessing and feature extraction computed homomorphically will provide much more flexibility for homomorphic neural nets.  
 
+
+### Homomorphic Image Resizing
+There are two common types of interpolation used when images are scaled: [bilinear interpolation](https://en.wikipedia.org/wiki/Bilinear_interpolation) and [bicubic interpolation](https://en.wikipedia.org/wiki/Bicubic_interpolation). Bilinear interpolation requires a 2 by 2 square around the point to be interpolated, and involves linear interpolation in one direction and then in the other in a two dimensional space. Bicubic interpolation is similar except cubic rather than linear interpolation is used, and it requires a 4 by 4 square around a point to be interpolated.
+
+
+A potential use for resizing an image homomorphically would be for multiple predictions on an image. Since most neural nets take a fixed width, height, and channels for images, a resizing or cropping an image on the end user side would require the end user to encrypt the image multiple times for each resizing. Unfortunately, homomorphic encryption is incredibly costly for the end user. An alternative would to be send the original image, encrypted homomorphically, to the server, and let the server take care of resizing in the case that the image be used in multiple predictive algorithms. 
+
+
+Some examples of the images generated with different parameters. 
+
+![bicubicboaz](docs/bicubicboaz.png)
+
+![Resize FHE workflow](docs/resizeworkflow.png)
+
+
+### Homomorphic JPEG-2 Encoding
+Image compression cuts the frames of the video into blocks, which is then compressed using frequency analysis. To compress video homomorphically, we implement the [discrete cosine transform](https://en.wikipedia.org/wiki/Discrete_cosine_transform) 
+and multiply by a [quantization](https://en.wikipedia.org/wiki/Quantization_(image_processing)) factor to throw away the higher frequencies of our image. 
+
+![JPEG workflow](docs/jpgworkflow.png)
+
+The quality of the encoding depends quite significantly on the parameters used. Some examples are as follows, as what happens when the noise budget limit is exceeded or the values in the DCT overflow or clip. 
+
+![encodeboaz](docs/jpegboaz.png)
+
+
 ## Homomorphic Image Decompression
 
 We will show how to homomorphically compute something simpler than JPEG decompression, run length decoding. The idea is the same: we would like to expand out a [run length encoding](https://en.wikipedia.org/wiki/Run-length_encoding) (which is used after DCT step of the JPEG standard)
@@ -37,36 +63,6 @@ run length decoding homomorphically. The results depend on the accuracy of the
 approximations uses. Several sample images are as follows. 
 
 ![decodeboaz](docs/decodeboaz.png)
-
-
-
-
-
-### Homomorphic Image Resizing
-There are two common types of interpolation used when images are scaled: [bilinear interpolation](https://en.wikipedia.org/wiki/Bilinear_interpolation) and [bicubic interpolation](https://en.wikipedia.org/wiki/Bicubic_interpolation). Bilinear interpolation requires a 2 by 2 square around the point to be interpolated, and involves linear interpolation in one direction and then in the other in a two dimensional space. Bicubic interpolation is similar except cubic rather than linear interpolation is used, and it requires a 4 by 4 square around a point to be interpolated.
-
-
-A potential use for resizing an image homomorphically would be for multiple predictions on an image. Since most neural nets take a fixed width, height, and channels for images, a resizing or cropping an image on the end user side would require the end user to encrypt the image multiple times for each resizing. Unfortunately, homomorphic encryption is incredibly costly for the end user. An alternative would to be send the original image, encrypted homomorphically, to the server, and let the server take care of resizing in the case that the image be used in multiple predictive algorithms. 
-
-
-Some examples of the images generated with different parameters. 
-
-![bicubicboaz](docs/bicubicboaz.png)
-
-![Resize FHE workflow](docs/resizeworkflow.png)
-
-
-### Homomorphic JPEG-2 Encoding
-Image compression cuts the frames of the video into blocks, which is then compressed using frequency analysis. To compress video homomorphically, we implement the [discrete cosine transform](https://en.wikipedia.org/wiki/Discrete_cosine_transform) 
-and multiply by a [quantization](https://en.wikipedia.org/wiki/Quantization_(image_processing)) factor to throw away the higher frequencies of our image. 
-
-![JPEG workflow](docs/jpgworkflow.png)
-
-The quality of the encoding depends quite significantly on the parameters used. Some examples are as follows, as what happens when the noise budget limit is exceeded or the values in the DCT overflow or clip. 
-
-![encodeboaz](docs/jpegboaz.png)
-
-
 
 ## Installation Instructions
 
@@ -131,7 +127,7 @@ We used a few external libraries and source code, here are links to their respec
 
 * J. Fan and F. Vercauteren. Somewhat Practical Fully Homomorphic Encryption. In \textit{IACR Cryptology ePrint Archive}, 2012.
 
-* Cmglee. Comparison of 1D and 2D interpolation. 2016. Available: \url{https://commons.wikimedia.org/wiki/FileComparison\_of\_1D\_and\_2D\_interpolation.svg}
+* Cmglee. Comparison of 1D and 2D interpolation. 2016. Available: [https://commons.wikimedia.org/wiki/FileComparison\_of\_1D\_and\_2D\_interpolation.svg](https://commons.wikimedia.org/wiki/FileComparison\_of\_1D\_and\_2D\_interpolation.svg)
 
 * N. Buscher and S. Katzenbeisser. Compilation for Secure Multi-party Computation. Springer International Publishing, 2017. 
 
