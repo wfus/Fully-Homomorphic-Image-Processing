@@ -64,7 +64,7 @@ and multiply by a [quantization](https://en.wikipedia.org/wiki/Quantization_(ima
 
 The quality of the encoding depends quite significantly on the parameters used. Some examples are as follows, as what happens when the noise budget limit is exceeded or the values in the DCT overflow or clip. 
 
-![encodeboaz](docs/jpegboaz)
+![encodeboaz](docs/jpegboaz.png)
 
 
 
