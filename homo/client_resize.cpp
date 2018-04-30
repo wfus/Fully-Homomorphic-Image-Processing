@@ -95,15 +95,8 @@ int main(int argc, const char** argv) {
         const int requested_composition = 3;
         int width = 0, height = 0, actual_composition = 0;
         uint8_t *image_data = stbi_load(test_filename.c_str(), &width, &height, &actual_composition, requested_composition);
-        // The image will be interleaved r g b r g b ...
-        // std::cout << width << " x " << height << " Channels: " << actual_composition << std::endl;
         int channels = requested_composition;
-        // std::vector<uint8_t> original_image;
-        // for (int i = 0; i < width * height * channels; i++) {
-        //     original_image.push_back(image_data[i]);
-        // }
-        // show_image_rgb(width, height, original_image);
-
+      
         // Encryption Parameters
         EncryptionParameters params;
         char poly_mod[16];
@@ -124,23 +117,15 @@ int main(int argc, const char** argv) {
 
         // Generate keys
         // and save them to file
-        std::ofstream pkfile, skfile, ekfile;
+        std::ofstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        ekfile.open("./keys/evalkey.txt");
-        // start = std::chrono::steady_clock::now(); 
         KeyGenerator keygen(context);
         auto public_key = keygen.public_key();
         auto secret_key = keygen.secret_key();
-        EvaluationKeys ev_key;
-        keygen.generate_evaluation_keys(dbc, ev_key);
         public_key.save(pkfile);
         secret_key.save(skfile);
-        ev_key.save(ekfile);
-        // diff = std::chrono::steady_clock::now() - start; 
-        // std::cout << "KeyGen: ";
-        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
-        pkfile.close(); skfile.close(); ekfile.close();
+        pkfile.close(); skfile.close();
 
 
         // Encrytor and decryptor setup
@@ -156,7 +141,6 @@ int main(int argc, const char** argv) {
         // Write to ciphertext as RGBRGBRGBRGB row by row. 
         std::ofstream myfile;
         myfile.open(ctext_outfile.c_str());
-        // std::cout << width << " " << height << std::endl;
        
         Ciphertext c;
         std::cout << "Encryption,";
@@ -169,9 +153,7 @@ int main(int argc, const char** argv) {
             
         }
         std::cout << std::endl;
-        // std::cout << "EncryptWrite: ";
-        // std::cout << chrono::duration<double, milli>(diff).count() << std::endl;
-        // std::cout << "EncryptWritePerPixel: " << chrono::duration<double, milli>(diff).count()/(width*height) << std::endl;
+       
         myfile.close();
     }
 
@@ -196,14 +178,10 @@ int main(int argc, const char** argv) {
         std::ifstream pkfile, skfile;
         pkfile.open("./keys/pubkey.txt");
         skfile.open("./keys/seckey.txt");
-        // start = std::chrono::steady_clock::now(); 
         PublicKey public_key;
         SecretKey secret_key;
         public_key.load(pkfile);
         secret_key.load(skfile);
-        // diff = std::chrono::steady_clock::now() - start; 
-        // std::cout << "Key Load Time: ";
-        // std::cout << chrono::duration<double, milli>(diff).count() << " ms" << std::endl;
         pkfile.close(); skfile.close();    
 
         Encryptor encryptor(context, public_key);
@@ -215,7 +193,6 @@ int main(int argc, const char** argv) {
         // Read in the image as RGB interleaved...
         // Assuming that there are three channels
         std::ifstream instream;
-        // std::cout << "Loading Ciphertexts now..." << std::endl; 
         instream.open(ctext_infile.c_str());
         std::vector<uint8_t> decrypted_image;
         Plaintext p;
@@ -227,7 +204,6 @@ int main(int argc, const char** argv) {
             decryptor.decrypt(c, p);
             diff = std::chrono::steady_clock::now() - start; 
             std::cout << chrono::duration<double, milli>(diff).count() << ',';
-            // std::cout << i << '\t' << encoder.decode(p) << std::endl;
             int pixel = encoder.decode(p);
             CLAMP(pixel, 0, 255)
             decrypted_image.push_back((uint8_t) pixel);
