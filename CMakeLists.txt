@@ -29,27 +29,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
 # Make the FHE demo programs and put them to BIN
+# JPEG Compression Demos
 add_executable(client_jpeg homo/client_jpeg.cpp ${LIBRARY_SOURCES})
 add_executable(server_jpeg homo/server_jpeg.cpp ${LIBRARY_SOURCES})
 target_link_libraries(client_jpeg seal)
 target_link_libraries(server_jpeg seal)
 
-# Picture resizing demos
+# Picture Resizing Demos
 add_executable(client_resize homo/client_resize.cpp ${LIBRARY_SOURCES})
 add_executable(server_resize homo/server_resize.cpp ${LIBRARY_SOURCES})
 target_link_libraries(client_resize seal ${OpenCV_LIBS})
 target_link_libraries(server_resize seal ${OpenCV_LIBS})
 
 # JPEG Decompression Demos 
-add_executable(decode_client homo/client_decode.cpp ${LIBRARY_SOURCES})
-add_executable(decode_server homo/server_decode.cpp ${LIBRARY_SOURCES})
-target_link_libraries(decode_client seal ${OpenCV_LIBS})
-target_link_libraries(decode_server seal ${OpenCV_LIBS})
-
-
-# Image testing, debugging only
-add_executable(image_test homo/image_test.cpp ${LIBRARY_SOURCES})
-target_link_libraries(image_test seal ${OpenCV_LIBS})
+add_executable(client_decode homo/client_decode.cpp ${LIBRARY_SOURCES})
+add_executable(server_decode homo/server_decode.cpp ${LIBRARY_SOURCES})
+target_link_libraries(client_decode seal ${OpenCV_LIBS})
+target_link_libraries(server_decode seal ${OpenCV_LIBS})
 
 
 # Image testing, debugging only
