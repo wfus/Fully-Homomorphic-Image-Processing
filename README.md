@@ -8,12 +8,11 @@ There are two common types of interpolation used when images are scaled: [biline
 
 A potential use for resizing an image homomorphically would be for multiple predictions on an image. Since most neural nets take a fixed width, height, and channels for images, a resizing or cropping an image on the end user side would require the end user to encrypt the image multiple times for each resizing. Unfortunately, homomorphic encryption is incredibly costly for the end user. An alternative would to be send the original image, encrypted homomorphically, to the server, and let the server take care of resizing in the case that the image be used in multiple predictive algorithms. 
 
+![Resize FHE workflow](docs/resizeworkflow.png)
 
-Some examples of the images generated with different parameters. 
+Some examples of the images generated with different parameters:
 
 ![bicubicboaz](docs/bicubicboaz.png)
-
-![Resize FHE workflow](docs/resizeworkflow.png)
 
 
 ### Homomorphic JPEG-2 Encoding
@@ -47,7 +46,9 @@ herefore, we use the following method of approximating the run length encoding.
 Consider an example with a fixed output length of 16 as in the case for video encodings. 
 ```
 [(20, 8), (30, 3), (15, 5)]
+```
 gets decoded to 
+```
 [ 20, 20, 20, 20, 20, 20, 20, 20, 30, 30, 30, 15, 15, 15, 15, 15 ]
 ```
 Since the output array is a fixed length, we can image that is it a continuous function $f$ with domain from $0$ to $16$, and split the function apart into $f_1, f_2, f_3$ corresponding to each pair, which is depicted as follows. 
